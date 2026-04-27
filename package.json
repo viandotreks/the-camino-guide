@@ -9,9 +9,9 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^4.16.0",
-    "@astrojs/sitemap": "^3.2.0",
-    "@astrojs/netlify": "^5.5.0"
+    "@astrojs/netlify": "^5.5.0",
+    "@astrojs/sitemap": "^3.2.1",
+    "astro": "^4.16.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0"

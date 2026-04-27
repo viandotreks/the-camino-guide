@@ -1,4 +1,5 @@
 import { defineConfig } from 'astro/config';
+import sitemap from '@astrojs/sitemap';
 import netlify from '@astrojs/netlify';
 
 export default defineConfig({
@@ -15,5 +16,12 @@ export default defineConfig({
     },
   },
 
-  integrations: [],
+  integrations: [
+    sitemap({
+      i18n: {
+        defaultLocale: 'en',
+        locales: { en: 'en-US' },
+      },
+    }),
+  ],
 });
