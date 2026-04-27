@@ -1,0 +1,152 @@
+---
+// index.astro — homepage
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const routes = await getCollection('routes', ({ data }) => data.published);
+---
+
+<BaseLayout
+  title="The Camino Guide"
+  description="The definitive English-language guide to the Camino de Santiago. Stage-by-stage coverage, practical services, and cultural depth — all verified on the ground."
+>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero__content">
+      <p class="hero__label">Camino de Santiago</p>
+      <h1 class="hero__title">The guide that walks with you.</h1>
+      <p class="hero__subtitle">
+        Stage-by-stage coverage of the Camino's routes — distances, services, culture —
+        written in plain English and verified on the ground.
+      </p>
+      <a href="/french-way" class="hero__cta">Start with the French Way →</a>
+    </div>
+  </section>
+
+  <!-- Routes -->
+  <section class="routes-section container">
+    <h2 class="routes-section__title">Routes</h2>
+    <div class="routes-grid">
+      {routes.map(route => {
+        const r = route.data;
+        return (
+          <a href={`/${route.slug}`} class="route-card">
+            <p class="route-card__title">{r.title}</p>
+            <p class="route-card__meta">{r.total_distance_km} km &nbsp;·&nbsp; {r.total_stages} stages</p>
+            <p class="route-card__endpoints">{r.start_point} → {r.end_point}</p>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+  .hero {
+    background-color: var(--color-forest);
+    color: var(--color-white);
+    padding: 5rem 1.5rem;
+    text-align: center;
+  }
+
+  .hero__content {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .hero__label {
+    font-size: var(--text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-amber-light);
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .hero__title {
+    font-family: var(--font-serif);
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    color: var(--color-white);
+    line-height: 1.1;
+    margin-bottom: 1.25rem;
+  }
+
+  .hero__subtitle {
+    font-size: var(--text-lg);
+    color: rgba(255,255,255,0.75);
+    line-height: 1.65;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero__cta {
+    display: inline-block;
+    background-color: var(--color-amber);
+    color: var(--color-white);
+    padding: 0.875rem 2rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: var(--text-base);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: background-color var(--transition-fast);
+  }
+
+  .hero__cta:hover { background-color: var(--color-amber-light); }
+
+  /* Routes section */
+  .routes-section {
+    padding: 4rem 1.5rem;
+  }
+
+  .routes-section__title {
+    font-family: var(--font-serif);
+    font-size: var(--text-2xl);
+    color: var(--color-forest);
+    margin-bottom: 1.5rem;
+    margin-top: 0;
+  }
+
+  .routes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+
+  .route-card {
+    display: block;
+    background-color: var(--color-cream-dark);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  }
+
+  .route-card:hover {
+    border-color: var(--color-forest);
+    box-shadow: 0 2px 12px rgba(30, 58, 42, 0.1);
+  }
+
+  .route-card__title {
+    font-family: var(--font-serif);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--color-forest);
+    margin-bottom: 0.4rem;
+  }
+
+  .route-card__meta {
+    font-size: var(--text-sm);
+    color: var(--color-ink-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .route-card__endpoints {
+    font-size: var(--text-sm);
+    color: var(--color-amber);
+    font-weight: 500;
+  }
+</style>

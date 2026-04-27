@@ -1,0 +1,55 @@
+---
+// [route]/[slug].astro — stage page, "The Guide" tab (default)
+import { getCollection, getEntry } from 'astro:content';
+import StageLayout from '../../layouts/StageLayout.astro';
+
+export async function getStaticPaths() {
+  const stages = await getCollection('stages', ({ data }) => data.published);
+  return stages.map((stage) => ({
+    params: {
+      route: stage.data.route,
+      slug: stage.slug,
+    },
+    props: { stage },
+  }));
+}
+
+const { stage } = Astro.props;
+const { Content } = await stage.render();
+const s = stage.data;
+---
+
+<StageLayout stage={stage} activeTab="guide">
+
+  <!-- "In Short" teaser block -->
+  <div class="in-short">{s.in_short}</div>
+
+  <!-- Watch out for -->
+  {s.watch_out_for.length > 0 && (
+    <section aria-labelledby="watch-out-heading">
+      <h2 id="watch-out-heading">Watch out for</h2>
+      <ul class="watch-out-list">
+        {s.watch_out_for.map(item => <li>{item}</li>)}
+      </ul>
+    </section>
+  )}
+
+  <!-- Step by step — the main narrative (markdown body) -->
+  <section aria-labelledby="step-by-step-heading">
+    <h2 id="step-by-step-heading">Step by step</h2>
+    <div class="prose">
+      <Content />
+    </div>
+  </section>
+
+  <!-- For bikers -->
+  {s.for_bikers && (
+    <section aria-labelledby="bikers-heading">
+      <h2 id="bikers-heading">For bikers</h2>
+      <div class="prose">
+        <p>{s.for_bikers}</p>
+      </div>
+    </section>
+  )}
+
+</StageLayout>

@@ -1,0 +1,23 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Redirects for Decap CMS admin
+[[redirects]]
+  from = "/admin"
+  to = "/admin/index.html"
+  status = 200
+
+# Pretty URLs — /french-way/roncesvalles instead of /french-way/roncesvalles/
+[[redirects]]
+  from = "/*/"
+  to = "/:splat"
+  status = 301
+
+[dev]
+  command = "npm run dev"
+  port = 4321
+  publish = "dist"

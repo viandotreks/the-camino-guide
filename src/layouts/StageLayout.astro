@@ -1,0 +1,167 @@
+---
+// StageLayout.astro — layout for all stage pages
+// Handles header, tabs, sidebar with technical data, stage navigation
+import BaseLayout from './BaseLayout.astro';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  stage: CollectionEntry<'stages'>;
+  activeTab: 'guide' | 'services' | 'culture';
+}
+
+const { stage, activeTab } = Astro.props;
+const s = stage.data;
+
+// Build URLs for this stage's tabs
+const baseUrl = `/${s.route}/${stage.slug}`;
+const tabUrls = {
+  guide:    baseUrl,
+  services: `${baseUrl}/services`,
+  culture:  `${baseUrl}/culture`,
+};
+
+// Difficulty label
+const difficultyLabel: Record<string, string> = {
+  'easy':      'Easy',
+  'moderate':  'Moderate',
+  'hard':      'Hard',
+  'very-hard': 'Very Hard',
+};
+
+// Format distance with one decimal
+const distanceFormatted = s.distance_km % 1 === 0
+  ? `${s.distance_km} km`
+  : `${s.distance_km.toFixed(1)} km`;
+---
+
+<BaseLayout
+  title={s.title}
+  description={s.seo_description ?? `Stage guide: ${s.title}. ${s.distance_km} km. Difficulty: ${difficultyLabel[s.difficulty]}.`}
+>
+
+  <!-- Page header -->
+  <header class="page-header">
+    <div class="container">
+      <p class="page-header__eyebrow">
+        <a href={`/${s.route}`} style="color: inherit; text-decoration: none;">
+          French Way
+        </a>
+        &nbsp;·&nbsp; Stage {s.order}
+      </p>
+      <h1>{s.title}</h1>
+      <div class="page-header__meta">
+        <span class="page-header__meta-item">{distanceFormatted}</span>
+        <span class="page-header__meta-item">↑ {s.elevation_gain_m} m &nbsp; ↓ {s.elevation_loss_m} m</span>
+        <span class="page-header__meta-item">{s.estimated_time_h}</span>
+        {s.last_verified && (
+          <span class="page-header__meta-item" style="margin-left: auto; opacity: 0.6; font-size: 0.8rem;">
+            Verified {s.last_verified}
+          </span>
+        )}
+      </div>
+    </div>
+  </header>
+
+  <!-- Tab navigation -->
+  <nav class="tab-nav" aria-label="Stage sections">
+    <a
+      href={tabUrls.guide}
+      class="tab-nav__item"
+      aria-current={activeTab === 'guide' ? 'page' : undefined}
+    >
+      The Guide
+    </a>
+    <a
+      href={tabUrls.services}
+      class="tab-nav__item"
+      aria-current={activeTab === 'services' ? 'page' : undefined}
+    >
+      Services
+    </a>
+    <a
+      href={tabUrls.culture}
+      class="tab-nav__item"
+      aria-current={activeTab === 'culture' ? 'page' : undefined}
+    >
+      Culture &amp; POIs
+    </a>
+  </nav>
+
+  <!-- Main content area -->
+  <div class="stage-layout">
+
+    <!-- Sidebar: Technical data -->
+    <aside class="sidebar">
+      <p class="sidebar__title">Stage data</p>
+
+      <div class="sidebar__stat">
+        <span class="sidebar__stat-label">Distance</span>
+        <span class="sidebar__stat-value">{distanceFormatted}</span>
+      </div>
+      <div class="sidebar__stat">
+        <span class="sidebar__stat-label">Elevation gain</span>
+        <span class="sidebar__stat-value">↑ {s.elevation_gain_m} m</span>
+      </div>
+      <div class="sidebar__stat">
+        <span class="sidebar__stat-label">Elevation loss</span>
+        <span class="sidebar__stat-value">↓ {s.elevation_loss_m} m</span>
+      </div>
+      {s.max_slope_pct !== undefined && (
+        <div class="sidebar__stat">
+          <span class="sidebar__stat-label">Max slope</span>
+          <span class="sidebar__stat-value">{s.max_slope_pct}%</span>
+        </div>
+      )}
+      {s.avg_slope_pct !== undefined && (
+        <div class="sidebar__stat">
+          <span class="sidebar__stat-label">Avg slope</span>
+          <span class="sidebar__stat-value">{s.avg_slope_pct}%</span>
+        </div>
+      )}
+      <div class="sidebar__stat">
+        <span class="sidebar__stat-label">Est. time</span>
+        <span class="sidebar__stat-value">{s.estimated_time_h}</span>
+      </div>
+      <div class="sidebar__stat">
+        <span class="sidebar__stat-label">Difficulty</span>
+        <span class="sidebar__stat-value">
+          <span class={`badge-difficulty badge-difficulty--${s.difficulty}`}>
+            {difficultyLabel[s.difficulty]}
+          </span>
+        </span>
+      </div>
+      <div class="sidebar__stat">
+        <span class="sidebar__stat-label">From</span>
+        <span class="sidebar__stat-value">{s.start_locality}</span>
+      </div>
+      <div class="sidebar__stat">
+        <span class="sidebar__stat-label">To</span>
+        <span class="sidebar__stat-value">{s.end_locality}</span>
+      </div>
+    </aside>
+
+    <!-- Content slot -->
+    <article>
+      <slot />
+
+      <!-- Stage prev/next navigation -->
+      <nav class="stage-nav" aria-label="Adjacent stages">
+        {s.prev_stage_slug ? (
+          <a href={`/${s.route}/${s.prev_stage_slug}`} class="stage-nav__link stage-nav__link--prev">
+            <span class="stage-nav__label">← Previous stage</span>
+            <span class="stage-nav__title">{s.prev_stage_slug.replace(/-/g, ' ')}</span>
+          </a>
+        ) : <span />}
+
+        {s.next_stage_slug ? (
+          <a href={`/${s.route}/${s.next_stage_slug}`} class="stage-nav__link stage-nav__link--next">
+            <span class="stage-nav__label">Next stage →</span>
+            <span class="stage-nav__title">{s.next_stage_slug.replace(/-/g, ' ')}</span>
+          </a>
+        ) : <span />}
+      </nav>
+    </article>
+
+  </div>
+
+</BaseLayout>

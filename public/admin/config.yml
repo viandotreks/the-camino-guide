@@ -1,0 +1,134 @@
+## Decap CMS configuration for The Camino Guide
+## Docs: https://decapcms.org/docs/configuration-options/
+##
+## Git backend — content lives in GitHub alongside the code.
+## The CMS panel will be available at /admin once deployed.
+
+backend:
+  name: github
+  repo: YOUR-GITHUB-USERNAME/the-camino-guide   # ← update this
+  branch: main
+
+# Media uploads go into public/images so Astro serves them statically
+media_folder: public/images
+public_folder: /images
+
+# Netlify Identity handles authentication — enable it in your Netlify dashboard
+local_backend: true   # allows running CMS locally with `npx decap-server`
+
+collections:
+
+  # ─── ROUTES ────────────────────────────────────────────────────────────────
+  - name: routes
+    label: Routes
+    label_singular: Route
+    folder: src/content/routes
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { name: title,              label: Title,              widget: string }
+      - { name: slug,               label: URL slug,           widget: string, hint: "e.g. french-way" }
+      - { name: subtitle,           label: Subtitle,           widget: string, required: false }
+      - { name: total_distance_km,  label: Total distance (km), widget: number, value_type: float }
+      - { name: total_stages,       label: Total stages,       widget: number, value_type: int }
+      - name: difficulty
+        label: Difficulty
+        widget: select
+        options: [moderate, hard, very-hard]
+      - { name: start_point,        label: Start point,        widget: string }
+      - { name: end_point,          label: End point,          widget: string }
+      - name: country
+        label: Countries
+        widget: list
+        field: { name: item, label: Country, widget: string }
+      - { name: seo_description,    label: SEO description,    widget: string, hint: "Max 160 chars", pattern: ['^.{0,160}$', 'Max 160 chars'] }
+      - { name: published,          label: Published,          widget: boolean, default: false }
+      - { name: last_verified,      label: Last verified,      widget: date, format: YYYY-MM-DD, required: false }
+      - { name: body,               label: Route overview,     widget: markdown }
+
+  # ─── STAGES ────────────────────────────────────────────────────────────────
+  - name: stages
+    label: Stages
+    label_singular: Stage
+    folder: src/content/stages
+    create: true
+    slug: "{{route}}-{{slug}}"
+    sortable_fields: [order, route]
+    fields:
+      - { name: title,              label: Title,              widget: string, hint: "e.g. Saint-Jean-Pied-de-Port to Roncesvalles" }
+      - { name: route,              label: Route,              widget: string, hint: "e.g. french-way" }
+      - { name: order,              label: Stage number,       widget: number, value_type: int }
+      - { name: slug,               label: URL slug,           widget: string, hint: "e.g. saint-jean-roncesvalles" }
+
+      # Technical data
+      - { name: distance_km,        label: Distance (km),      widget: number, value_type: float }
+      - { name: elevation_gain_m,   label: Elevation gain (m), widget: number, value_type: int }
+      - { name: elevation_loss_m,   label: Elevation loss (m), widget: number, value_type: int }
+      - { name: max_slope_pct,      label: Max slope (%),      widget: number, value_type: float, required: false }
+      - { name: avg_slope_pct,      label: Avg slope (%),      widget: number, value_type: float, required: false }
+      - name: difficulty
+        label: Difficulty
+        widget: select
+        options: [easy, moderate, hard, very-hard]
+      - { name: estimated_time_h,   label: Estimated time,     widget: string, hint: "e.g. 6–8 hours" }
+
+      # Localities
+      - { name: start_locality,     label: Start locality,     widget: string }
+      - { name: end_locality,       label: End locality,       widget: string }
+      - { name: start_locality_slug, label: Start locality slug, widget: string, required: false }
+      - { name: end_locality_slug,  label: End locality slug,  widget: string, required: false }
+
+      # Navigation
+      - { name: prev_stage_slug,    label: Previous stage slug, widget: string, required: false }
+      - { name: next_stage_slug,    label: Next stage slug,    widget: string, required: false }
+
+      # Content
+      - { name: in_short,           label: In short,           widget: text,   hint: "2–3 sentences. Sets the stage. One paragraph." }
+      - name: watch_out_for
+        label: Watch out for
+        widget: list
+        field: { name: item, label: Item, widget: string }
+        hint: "One item per line. Each is a complete sentence."
+      - { name: for_bikers,         label: For bikers,         widget: text,   required: false }
+      - { name: body,               label: Step by step,       widget: markdown }
+
+      # Meta
+      - { name: seo_description,    label: SEO description,    widget: string, required: false, hint: "Max 160 chars" }
+      - { name: published,          label: Published,          widget: boolean, default: false }
+      - { name: last_verified,      label: Last verified,      widget: date, format: YYYY-MM-DD, required: false }
+
+  # ─── LOCALITIES ────────────────────────────────────────────────────────────
+  - name: localities
+    label: Localities
+    label_singular: Locality
+    folder: src/content/localities
+    create: true
+    slug: "{{route}}-{{slug}}"
+    fields:
+      - { name: name,               label: Name (primary),     widget: string }
+      - { name: name_alt,           label: Name (alternative), widget: string, required: false, hint: "Regional / co-official name, e.g. Orreaga" }
+      - { name: route,              label: Route,              widget: string, hint: "e.g. french-way" }
+      - { name: slug,               label: URL slug,           widget: string, hint: "e.g. roncesvalles" }
+      - { name: km_to_santiago,     label: km to Santiago,     widget: number, value_type: float }
+      - { name: population,         label: Population,         widget: number, value_type: int, required: false }
+      - name: languages
+        label: Languages
+        widget: list
+        field: { name: item, label: Language, widget: string }
+      - { name: region,             label: Region,             widget: string, required: false }
+      - { name: country,            label: Country,            widget: string, default: Spain }
+
+      # Services
+      - { name: has_albergue,       label: Pilgrim hostel,     widget: boolean, default: false }
+      - { name: has_hotel,          label: Hotel,              widget: boolean, default: false }
+      - { name: has_atm,            label: ATM,                widget: boolean, default: false }
+      - { name: has_pharmacy,       label: Pharmacy,           widget: boolean, default: false }
+      - { name: has_supermarket,    label: Supermarket,        widget: boolean, default: false }
+      - { name: has_medical,        label: Medical centre,     widget: boolean, default: false }
+
+      - { name: body,               label: The Guide,          widget: markdown, hint: "Cultural and historical narrative." }
+
+      # Meta
+      - { name: seo_description,    label: SEO description,    widget: string, required: false }
+      - { name: published,          label: Published,          widget: boolean, default: false }
+      - { name: last_verified,      label: Last verified,      widget: date, format: YYYY-MM-DD, required: false }

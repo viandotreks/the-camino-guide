@@ -1,0 +1,113 @@
+---
+// BaseLayout.astro — wraps every page
+interface Props {
+  title: string;
+  description?: string;
+  canonicalUrl?: string;
+  ogType?: 'website' | 'article';
+}
+
+const {
+  title,
+  description = 'The definitive English-language guide to the Camino de Santiago.',
+  canonicalUrl = Astro.url.href,
+  ogType = 'website',
+} = Astro.props;
+
+const siteName = 'The Camino Guide';
+const fullTitle = title === siteName ? title : `${title} — ${siteName}`;
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="generator" content={Astro.generator} />
+
+  <title>{fullTitle}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonicalUrl} />
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content={ogType} />
+  <meta property="og:title"       content={fullTitle} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url"         content={canonicalUrl} />
+  <meta property="og:site_name"   content={siteName} />
+
+  <!-- Favicon placeholder — replace with real assets -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+  <!-- Fonts loaded in global.css via Google Fonts -->
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+<body>
+
+  <!-- Site navigation -->
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <a href="/" class="site-nav__logo">The Camino Guide</a>
+    <ul class="site-nav__links">
+      <li><a href="/french-way">French Way</a></li>
+      <li><a href="/prepare">Prepare</a></li>
+      <li><a href="/services">Services</a></li>
+      <li><a href="/about">About</a></li>
+    </ul>
+  </nav>
+
+  <main id="main-content">
+    <slot />
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="site-footer__grid">
+      <div>
+        <p class="site-footer__col-title">Routes</p>
+        <ul class="site-footer__links">
+          <li><a href="/french-way">French Way</a></li>
+          <li><a href="/portuguese-way" aria-disabled="true">Portuguese Way <em>(coming soon)</em></a></li>
+          <li><a href="/northern-way" aria-disabled="true">Northern Way <em>(coming soon)</em></a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="site-footer__col-title">Plan your Camino</p>
+        <ul class="site-footer__links">
+          <li><a href="/prepare">Prepare</a></li>
+          <li><a href="/prepare/gear">Gear &amp; Equipment</a></li>
+          <li><a href="/services">Luggage Transport</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="site-footer__col-title">About</p>
+        <ul class="site-footer__links">
+          <li><a href="/about">About this guide</a></li>
+          <li><a href="/about#verified">How we verify data</a></li>
+          <li><a href="/contact">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="site-footer__col-title">Legal</p>
+        <ul class="site-footer__links">
+          <li><a href="/legal/privacy">Privacy Policy</a></li>
+          <li><a href="/legal/cookies">Cookies</a></li>
+          <li><a href="/legal/terms">Terms of Use</a></li>
+          <li><a href="/legal/affiliate-disclosure">Affiliate Disclosure</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="site-footer__bottom">
+      <span>© {new Date().getFullYear()} The Camino Guide. A property of Viandotreks SL.</span>
+      <span>Affiliate links to Booking.com and Amazon are disclosed. <a href="/legal/affiliate-disclosure">Learn more</a>.</span>
+    </div>
+  </footer>
+
+</body>
+</html>
+
+<style is:global>
+  @import '../styles/global.css';
+</style>

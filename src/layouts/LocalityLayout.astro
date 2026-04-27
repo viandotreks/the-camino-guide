@@ -1,0 +1,112 @@
+---
+// LocalityLayout.astro — layout for locality pages
+import BaseLayout from './BaseLayout.astro';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  locality: CollectionEntry<'localities'>;
+  activeTab: 'guide' | 'lodging';
+}
+
+const { locality, activeTab } = Astro.props;
+const l = locality.data;
+
+const baseUrl = `/${l.route}/${locality.slug}`;
+const tabUrls = {
+  guide:   baseUrl,
+  lodging: `${baseUrl}/lodging`,
+};
+
+const servicesAvailable = [
+  l.has_albergue    && 'Pilgrim hostel',
+  l.has_hotel       && 'Hotel',
+  l.has_atm         && 'ATM',
+  l.has_pharmacy    && 'Pharmacy',
+  l.has_supermarket && 'Supermarket',
+  l.has_medical     && 'Medical centre',
+].filter(Boolean) as string[];
+---
+
+<BaseLayout
+  title={l.name}
+  description={l.seo_description ?? `${l.name} on the Camino de Santiago. ${l.km_to_santiago} km to Santiago.`}
+>
+
+  <!-- Page header -->
+  <header class="page-header">
+    <div class="container">
+      <p class="page-header__eyebrow">
+        <a href={`/${l.route}`} style="color: inherit; text-decoration: none;">
+          French Way
+        </a>
+        &nbsp;·&nbsp; Locality
+      </p>
+      <h1>
+        {l.name}
+        {l.name_alt && <small style="font-size: 0.6em; font-weight: 400; opacity: 0.8;"> / {l.name_alt}</small>}
+      </h1>
+      <div class="page-header__meta">
+        <span class="page-header__meta-item">{l.km_to_santiago} km to Santiago</span>
+        {l.population && (
+          <span class="page-header__meta-item">Pop. {l.population.toLocaleString('en-US')}</span>
+        )}
+        <span class="page-header__meta-item">{l.languages.join(' / ')}</span>
+        {l.region && <span class="page-header__meta-item">{l.region}</span>}
+      </div>
+    </div>
+  </header>
+
+  <!-- Tab navigation -->
+  <nav class="tab-nav" aria-label="Locality sections">
+    <a
+      href={tabUrls.guide}
+      class="tab-nav__item"
+      aria-current={activeTab === 'guide' ? 'page' : undefined}
+    >
+      The Guide
+    </a>
+    <a
+      href={tabUrls.lodging}
+      class="tab-nav__item"
+      aria-current={activeTab === 'lodging' ? 'page' : undefined}
+    >
+      Lodging &amp; Services
+    </a>
+  </nav>
+
+  <!-- Main content -->
+  <div class="stage-layout">
+
+    <!-- Sidebar: quick services overview -->
+    <aside class="sidebar">
+      <p class="sidebar__title">Services available</p>
+      {servicesAvailable.length > 0 ? (
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          {servicesAvailable.map(service => (
+            <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--color-border); font-size: 0.875rem; color: var(--color-ink-muted);">
+              ✓ {service}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p style="font-size: 0.875rem; color: var(--color-ink-faint);">
+          Limited services — plan ahead.
+        </p>
+      )}
+
+      <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border);">
+        <p class="sidebar__title">Distance to Santiago</p>
+        <p style="font-size: 1.75rem; font-weight: 700; color: var(--color-forest); font-family: var(--font-serif);">
+          {l.km_to_santiago} km
+        </p>
+      </div>
+    </aside>
+
+    <!-- Content slot -->
+    <article>
+      <slot />
+    </article>
+
+  </div>
+
+</BaseLayout>
