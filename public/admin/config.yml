@@ -6,7 +6,7 @@
 
 backend:
   name: github
-  repo: YOUR-GITHUB-USERNAME/the-camino-guide   # ← update this
+  repo: viandotreks/the-camino-guide
   branch: main
 
 # Media uploads go into public/images so Astro serves them statically
