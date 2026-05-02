@@ -1,23 +1,22 @@
 ---
-// LocalityLayout.astro — layout for locality pages
 import BaseLayout from './BaseLayout.astro';
 import type { CollectionEntry } from 'astro:content';
 
 interface Props {
   locality: CollectionEntry<'localities'>;
-  activeTab: 'guide' | 'lodging';
+  activeTab?: 'guide' | 'lodging';
 }
 
-const { locality, activeTab } = Astro.props;
+const { locality, activeTab = 'guide' } = Astro.props;
 const l = locality.data;
 
-const baseUrl = `/${l.route}/${locality.slug}`;
-const tabUrls = {
-  guide:   baseUrl,
-  lodging: `${baseUrl}/lodging`,
-};
+const metaCells = [
+  { key: 'Region',     val: l.region ?? '—' },
+  { key: 'Population', val: l.population != null ? l.population.toLocaleString('en-US') : '—' },
+  { key: 'Languages',  val: l.languages.join(', ') },
+];
 
-const servicesAvailable = [
+const services = [
   l.has_albergue    && 'Pilgrim hostel',
   l.has_hotel       && 'Hotel',
   l.has_atm         && 'ATM',
@@ -29,84 +28,136 @@ const servicesAvailable = [
 
 <BaseLayout
   title={l.name}
-  description={l.seo_description ?? `${l.name} on the Camino de Santiago. ${l.km_to_santiago} km to Santiago.`}
+  description={l.seo_description ?? `${l.name}${l.name_alt ? ` (${l.name_alt})` : ''} on the Camino de Santiago. ${l.km_to_santiago} km to Santiago.`}
+  breadcrumb="French Way · Towns"
+  breadcrumbUrl={`/${l.route}`}
+  activeRoute={l.route}
+  pageType="locality"
 >
 
   <!-- Page header -->
-  <header class="page-header">
-    <div class="container">
-      <p class="page-header__eyebrow">
-        <a href={`/${l.route}`} style="color: inherit; text-decoration: none;">
-          French Way
-        </a>
-        &nbsp;·&nbsp; Locality
-      </p>
-      <h1>
-        {l.name}
-        {l.name_alt && <small style="font-size: 0.6em; font-weight: 400; opacity: 0.8;"> / {l.name_alt}</small>}
-      </h1>
-      <div class="page-header__meta">
-        <span class="page-header__meta-item">{l.km_to_santiago} km to Santiago</span>
-        {l.population && (
-          <span class="page-header__meta-item">Pop. {l.population.toLocaleString('en-US')}</span>
-        )}
-        <span class="page-header__meta-item">{l.languages.join(' / ')}</span>
-        {l.region && <span class="page-header__meta-item">{l.region}</span>}
-      </div>
+  <header class="locality-header">
+    <div class="page-header__eyebrow" style="margin-bottom: 8px;">
+      <a href={`/${l.route}`} class="cg-eyebrow" style="color: var(--accent-ink); text-decoration: none;">
+        {l.route === 'french-way' ? 'French Way' : l.route}
+      </a>
+      <span class="page-header__eyebrow-sep cg-eyebrow">·</span>
+      <span class="cg-eyebrow">Town</span>
+    </div>
+
+    <h1>{l.name}</h1>
+    {l.name_alt && (
+      <div class="locality-header__alt cg-data">({l.name_alt})</div>
+    )}
+
+    <!-- km to Santiago — prominent -->
+    <div class="km-box">
+      <span class="km-box__label">to Santiago</span>
+      <span>
+        <span class="km-box__num">{l.km_to_santiago.toLocaleString('en-US')}</span>
+        <span class="km-box__unit">km</span>
+      </span>
+    </div>
+
+    <!-- Secondary data grid -->
+    <div class="locality-meta-grid">
+      {metaCells.map(cell => (
+        <div class="locality-meta-cell">
+          <div class="locality-meta-cell__key">{cell.key}</div>
+          <div class="locality-meta-cell__val">{cell.val}</div>
+        </div>
+      ))}
     </div>
   </header>
 
-  <!-- Tab navigation -->
-  <nav class="tab-nav" aria-label="Locality sections">
-    <a
-      href={tabUrls.guide}
-      class="tab-nav__item"
-      aria-current={activeTab === 'guide' ? 'page' : undefined}
+  <!-- Map -->
+  <div class="map-area">
+    {l.map_embed ? (
+      <Fragment set:html={l.map_embed} />
+    ) : (
+      <div class="map-area__placeholder">Outdooractive · Map embed</div>
+    )}
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tab-bar tab-bar--2" role="tablist" id="locality-tabs">
+    <button
+      class="tab-bar__btn"
+      role="tab"
+      aria-selected={activeTab === 'guide' ? 'true' : 'false'}
+      data-tab="guide"
     >
       The Guide
-    </a>
-    <a
-      href={tabUrls.lodging}
-      class="tab-nav__item"
-      aria-current={activeTab === 'lodging' ? 'page' : undefined}
+    </button>
+    <button
+      class="tab-bar__btn"
+      role="tab"
+      aria-selected={activeTab === 'lodging' ? 'true' : 'false'}
+      data-tab="lodging"
     >
       Lodging &amp; Services
-    </a>
-  </nav>
+    </button>
+  </div>
 
-  <!-- Main content -->
-  <div class="stage-layout">
+  <!-- Content -->
+  <div class="container" style="padding-top: 20px; padding-bottom: 8px;">
 
-    <!-- Sidebar: quick services overview -->
-    <aside class="sidebar">
-      <p class="sidebar__title">Services available</p>
-      {servicesAvailable.length > 0 ? (
-        <ul style="list-style: none; padding: 0; margin: 0;">
-          {servicesAvailable.map(service => (
-            <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--color-border); font-size: 0.875rem; color: var(--color-ink-muted);">
-              ✓ {service}
-            </li>
-          ))}
-        </ul>
+    <!-- Tab panel: Guide -->
+    <div id="tab-guide" class="tab-panel" data-tab="guide" role="tabpanel">
+      <slot />
+      {l.last_verified && (
+        <div class="verified-block">
+          <div class="verified-block__row">
+            <span class="verified-block__date">Verified {l.last_verified}</span>
+          </div>
+        </div>
+      )}
+    </div>
+
+    <!-- Tab panel: Lodging & Services -->
+    <div id="tab-lodging" class="tab-panel" data-tab="lodging" role="tabpanel" hidden>
+
+      {services.length > 0 ? (
+        <>
+          <p class="services-intro">Services available in {l.name}.</p>
+          <ul style="list-style: none; padding: 0; margin: 0 0 24px; border-top: 1px solid var(--rule-soft);">
+            {services.map(svc => (
+              <li style="display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--rule-soft); font-family: var(--sans); font-size: 14px; color: var(--ink-2);">
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--diff-easy); flex-shrink: 0;"></span>
+                {svc}
+              </li>
+            ))}
+          </ul>
+        </>
       ) : (
-        <p style="font-size: 0.875rem; color: var(--color-ink-faint);">
-          Limited services — plan ahead.
-        </p>
+        <p class="services-intro">Limited services — plan ahead.</p>
       )}
 
-      <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border);">
-        <p class="sidebar__title">Distance to Santiago</p>
-        <p style="font-size: 1.75rem; font-weight: 700; color: var(--color-forest); font-family: var(--font-serif);">
-          {l.km_to_santiago} km
-        </p>
+      <div class="coming-soon">
+        <div class="coming-soon__heading">Accommodation listings</div>
+        <p>Detailed accommodation data for this town is being added.</p>
+        <div class="coming-soon__caption">In preparation — 2026</div>
       </div>
-    </aside>
 
-    <!-- Content slot -->
-    <article>
-      <slot />
-    </article>
+    </div>
 
   </div>
 
 </BaseLayout>
+
+<!-- Tab switching -->
+<script>
+  const tabBar = document.getElementById('locality-tabs');
+  if (tabBar) {
+    const btns   = tabBar.querySelectorAll<HTMLButtonElement>('.tab-bar__btn');
+    const panels = document.querySelectorAll<HTMLElement>('.tab-panel');
+
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.tab;
+        btns.forEach(b => b.setAttribute('aria-selected', String(b === btn)));
+        panels.forEach(p => { p.hidden = p.dataset.tab !== target; });
+      });
+    });
+  }
+</script>

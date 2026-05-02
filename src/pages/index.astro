@@ -14,8 +14,9 @@ const routes = await getCollection('routes', ({ data }) => data.published);
   <!-- Hero -->
   <section class="hero">
     <div class="hero__content">
-      <p class="hero__label">Camino de Santiago</p>
-      <h1 class="hero__title">The guide that walks with you.</h1>
+      <a href="/" class="hero__logo-wrap" aria-label="The Camino Guide">
+        <img src="/logo.svg" alt="The Camino Guide" class="hero__logo" />
+      </a>
       <p class="hero__subtitle">
         Stage-by-stage coverage of the Camino's routes — distances, services, culture —
         written in plain English and verified on the ground.
@@ -26,15 +27,15 @@ const routes = await getCollection('routes', ({ data }) => data.published);
 
   <!-- Routes -->
   <section class="routes-section container">
-    <h2 class="routes-section__title">Routes</h2>
+    <h2 class="section-eyebrow routes-section__title">Routes</h2>
     <div class="routes-grid">
       {routes.map(route => {
         const r = route.data;
         return (
           <a href={`/${route.slug}`} class="route-card">
             <p class="route-card__title">{r.title}</p>
-            <p class="route-card__meta">{r.total_distance_km} km &nbsp;·&nbsp; {r.total_stages} stages</p>
-            <p class="route-card__endpoints">{r.start_point} → {r.end_point}</p>
+            <p class="route-card__meta cg-meta">{r.total_distance_km} km &nbsp;·&nbsp; {r.total_stages} stages</p>
+            <p class="route-card__endpoints cg-meta">{r.start_point} → {r.end_point}</p>
           </a>
         );
       })}
@@ -45,108 +46,101 @@ const routes = await getCollection('routes', ({ data }) => data.published);
 
 <style>
   .hero {
-    background-color: var(--color-forest);
-    color: var(--color-white);
-    padding: 5rem 1.5rem;
+    padding: 64px var(--gutter-mob) 56px;
     text-align: center;
+    border-bottom: 1px solid var(--rule);
   }
 
   .hero__content {
-    max-width: 680px;
+    max-width: 600px;
     margin: 0 auto;
   }
 
-  .hero__label {
-    font-size: var(--text-sm);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--color-amber-light);
-    font-weight: 600;
-    margin-bottom: 1rem;
+  .hero__logo-wrap {
+    display: block;
+    margin-bottom: 24px;
   }
 
-  .hero__title {
-    font-family: var(--font-serif);
-    font-size: clamp(2rem, 5vw, 3.25rem);
-    color: var(--color-white);
-    line-height: 1.1;
-    margin-bottom: 1.25rem;
+  .hero__logo {
+    height: 100px;
+    width: auto;
+    margin: 0 auto;
   }
 
   .hero__subtitle {
-    font-size: var(--text-lg);
-    color: rgba(255,255,255,0.75);
-    line-height: 1.65;
-    margin-bottom: 2.5rem;
+    font-family: var(--sans);
+    font-size: 15px;
+    color: var(--ink-3);
+    line-height: 1.6;
+    margin-bottom: 32px;
   }
 
   .hero__cta {
     display: inline-block;
-    background-color: var(--color-amber);
-    color: var(--color-white);
-    padding: 0.875rem 2rem;
-    border-radius: var(--radius-sm);
+    font-family: var(--sans);
+    font-size: 14px;
     font-weight: 600;
-    font-size: var(--text-base);
+    color: var(--accent-ink);
     text-decoration: none;
-    letter-spacing: 0.02em;
-    transition: background-color var(--transition-fast);
+    letter-spacing: 0.01em;
+    border-bottom: 1.5px solid var(--accent);
+    padding-bottom: 2px;
   }
 
-  .hero__cta:hover { background-color: var(--color-amber-light); }
+  .hero__cta:hover { color: var(--accent); }
 
   /* Routes section */
   .routes-section {
-    padding: 4rem 1.5rem;
+    padding-top: 40px;
+    padding-bottom: 48px;
   }
 
   .routes-section__title {
-    font-family: var(--font-serif);
-    font-size: var(--text-2xl);
-    color: var(--color-forest);
-    margin-bottom: 1.5rem;
-    margin-top: 0;
+    margin-bottom: 20px;
   }
 
   .routes-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1rem;
+    grid-template-columns: 1fr;
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  @media (min-width: 600px) {
+    .routes-grid {
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
   }
 
   .route-card {
     display: block;
-    background-color: var(--color-cream-dark);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    padding: 1.5rem;
+    background: var(--paper);
+    padding: 20px 20px;
     text-decoration: none;
     color: inherit;
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    transition: background 120ms;
   }
 
-  .route-card:hover {
-    border-color: var(--color-forest);
-    box-shadow: 0 2px 12px rgba(30, 58, 42, 0.1);
-  }
+  .route-card:hover { background: var(--paper-2); }
 
   .route-card__title {
-    font-family: var(--font-serif);
-    font-size: var(--text-xl);
-    font-weight: 700;
-    color: var(--color-forest);
-    margin-bottom: 0.4rem;
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 4px;
   }
 
   .route-card__meta {
-    font-size: var(--text-sm);
-    color: var(--color-ink-muted);
-    margin-bottom: 0.25rem;
+    color: var(--ink-3);
+    margin-bottom: 2px;
   }
 
   .route-card__endpoints {
-    font-size: var(--text-sm);
-    color: var(--color-amber);
-    font-weight: 500;
+    color: var(--accent-ink);
+    margin-top: 6px;
   }
 </style>

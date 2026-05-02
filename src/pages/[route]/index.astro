@@ -1,13 +1,12 @@
 ---
-// [route]/index.astro — route pillar page
-import { getCollection, getEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 export async function getStaticPaths() {
   const routes = await getCollection('routes', ({ data }) => data.published);
   return routes.map((route) => ({
     params: { route: route.slug },
-    props: { route },
+    props:  { route },
   }));
 }
 
@@ -15,77 +14,78 @@ const { route } = Astro.props;
 const { Content } = await route.render();
 const r = route.data;
 
-// Get all stages for this route
 const allStages = await getCollection('stages', ({ data }) =>
   data.route === route.slug && data.published
 );
 const stages = allStages.sort((a, b) => a.data.order - b.data.order);
 
-// Get all localities for this route
-const localities = await getCollection('localities', ({ data }) =>
-  data.route === route.slug && data.published
-);
+const difficultyLabel: Record<string, string> = {
+  easy:        'Easy',
+  moderate:    'Moderate',
+  hard:        'Hard',
+  'very-hard': 'Very Hard',
+};
 ---
 
 <BaseLayout
   title={r.title}
   description={r.seo_description}
   ogType="article"
+  breadcrumb="Routes"
+  breadcrumbUrl="/"
+  activeRoute={route.slug}
+  pageType="route"
 >
 
-  <header class="page-header">
-    <div class="container">
-      <p class="page-header__eyebrow">Camino de Santiago</p>
-      <h1>{r.title}</h1>
-      <div class="page-header__meta">
-        <span class="page-header__meta-item">{r.total_distance_km} km</span>
-        <span class="page-header__meta-item">{r.total_stages} stages</span>
-        <span class="page-header__meta-item">{r.start_point} → {r.end_point}</span>
-      </div>
+  <!-- Route header -->
+  <header class="route-header">
+    <div class="page-header__eyebrow" style="margin-bottom: 10px;">
+      <span class="cg-eyebrow">Camino de Santiago</span>
+    </div>
+    <h1>{r.title}</h1>
+    <div class="route-header__meta">
+      <span class="route-header__meta-item">{r.total_distance_km} km total</span>
+      <span class="route-header__meta-item">{r.total_stages} stages</span>
+      <span class="route-header__meta-item">{r.start_point} → {r.end_point}</span>
     </div>
   </header>
 
-  <div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
-
-    <!-- Route overview (from .md body) -->
-    <div class="prose" style="max-width: var(--max-width-content); margin-bottom: 3rem;">
+  <!-- Route overview prose -->
+  <div class="container" style="padding-top: 24px; padding-bottom: 32px;">
+    <div class="prose" style="max-width: 640px;">
       <Content />
     </div>
+  </div>
 
-    <!-- Stage list -->
-    <section aria-labelledby="stages-heading">
-      <h2 id="stages-heading" style="margin-top: 0;">Stages</h2>
-      <div style="display: grid; gap: 1px; background: var(--color-border); border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; margin-top: 1.5rem;">
-        {stages.map((stage) => {
-          const s = stage.data;
-          return (
-            <a
-              href={`/${s.route}/${s.slug}`}
-              style="display: grid; grid-template-columns: 2.5rem 1fr auto; gap: 1rem; align-items: center; padding: 1rem 1.25rem; background: var(--color-white); text-decoration: none; color: inherit; transition: background 150ms ease;"
-              class="stage-row"
-            >
-              <span style="font-family: var(--font-serif); font-size: 0.8rem; color: var(--color-ink-faint); font-weight: 600; text-align: center;">
-                {String(s.order).padStart(2, '0')}
-              </span>
-              <span>
-                <strong style="font-size: 0.95rem; display: block; color: var(--color-forest);">{s.title}</strong>
-                <span style="font-size: 0.8rem; color: var(--color-ink-muted);">
-                  {s.distance_km} km &nbsp;·&nbsp; ↑{s.elevation_gain_m} m ↓{s.elevation_loss_m} m
-                </span>
-              </span>
-              <span class={`badge-difficulty badge-difficulty--${s.difficulty}`} style="font-size: 0.7rem;">
-                {s.difficulty.replace('-', ' ')}
-              </span>
-            </a>
-          );
-        })}
-      </div>
-    </section>
+  <!-- Stage list -->
+  <div class="container" style="padding-bottom: 0;">
+    <h2 class="section-eyebrow" style="margin-bottom: 16px;">Stages</h2>
+  </div>
 
+  <div class="stage-list">
+    {stages.map((stage) => {
+      const sd = stage.data;
+      const gainStr = `+${sd.elevation_gain_m.toLocaleString('en-US')} m`;
+      const lossStr = `−${sd.elevation_loss_m.toLocaleString('en-US')} m`;
+      return (
+        <a
+          href={`/${sd.route}/${stage.slug}`}
+          class="stage-row"
+        >
+          <span class="stage-row__num">{String(sd.order).padStart(2, '0')}</span>
+          <span>
+            <span class="stage-row__title">{sd.title}</span>
+            <span class="stage-row__meta">
+              {sd.distance_km} km · {gainStr} / {lossStr}
+            </span>
+          </span>
+          <span class={`diff-badge diff-badge--${sd.difficulty}`}>
+            <span class="diff-badge__dot"></span>
+            {difficultyLabel[sd.difficulty]}
+          </span>
+        </a>
+      );
+    })}
   </div>
 
 </BaseLayout>
-
-<style>
-  .stage-row:hover { background-color: var(--color-cream-dark) !important; }
-</style>

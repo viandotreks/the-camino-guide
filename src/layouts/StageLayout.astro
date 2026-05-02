@@ -1,167 +1,304 @@
 ---
-// StageLayout.astro — layout for all stage pages
-// Handles header, tabs, sidebar with technical data, stage navigation
 import BaseLayout from './BaseLayout.astro';
+import { getCollection } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 
 interface Props {
   stage: CollectionEntry<'stages'>;
-  activeTab: 'guide' | 'services' | 'culture';
+  activeTab?: 'guide' | 'services' | 'culture';
 }
 
-const { stage, activeTab } = Astro.props;
+const { stage, activeTab = 'guide' } = Astro.props;
 const s = stage.data;
 
-// Build URLs for this stage's tabs
-const baseUrl = `/${s.route}/${stage.slug}`;
-const tabUrls = {
-  guide:    baseUrl,
-  services: `${baseUrl}/services`,
-  culture:  `${baseUrl}/culture`,
-};
-
-// Difficulty label
 const difficultyLabel: Record<string, string> = {
-  'easy':      'Easy',
-  'moderate':  'Moderate',
-  'hard':      'Hard',
+  easy:        'Easy',
+  moderate:    'Moderate',
+  hard:        'Hard',
   'very-hard': 'Very Hard',
 };
 
-// Format distance with one decimal
-const distanceFormatted = s.distance_km % 1 === 0
-  ? `${s.distance_km} km`
-  : `${s.distance_km.toFixed(1)} km`;
+// Format elevation
+const gainStr = `+${s.elevation_gain_m.toLocaleString('en-US')} m`;
+const lossStr = `−${s.elevation_loss_m.toLocaleString('en-US')} m`;
+
+// Sidebar / panel rows
+const dataRows = [
+  { label: 'Distance',    value: `${s.distance_km} km` },
+  { label: 'Elev. gain',  value: gainStr },
+  { label: 'Elev. loss',  value: lossStr },
+  s.max_slope_pct != null ? { label: 'Max grade', value: `${s.max_slope_pct}%` } : null,
+  s.avg_slope_pct != null ? { label: 'Avg grade', value: `${s.avg_slope_pct}%` } : null,
+  { label: 'Walking',     value: s.estimated_time_h },
+].filter(Boolean) as { label: string; value: string }[];
+
+const panelPreview = `${s.distance_km} km · ${gainStr}`;
+
+// Fetch prev/next stage titles for seq-nav
+const allStages = await getCollection('stages');
+const prevStage = s.prev_stage_slug
+  ? allStages.find(st => st.slug === s.prev_stage_slug)
+  : null;
+const nextStage = s.next_stage_slug
+  ? allStages.find(st => st.slug === s.next_stage_slug)
+  : null;
 ---
 
 <BaseLayout
   title={s.title}
-  description={s.seo_description ?? `Stage guide: ${s.title}. ${s.distance_km} km. Difficulty: ${difficultyLabel[s.difficulty]}.`}
+  description={s.seo_description ?? `Stage guide: ${s.title}. ${s.distance_km} km, ${gainStr}. Difficulty: ${difficultyLabel[s.difficulty]}.`}
+  breadcrumb="French Way"
+  breadcrumbUrl={`/${s.route}`}
+  activeRoute={s.route}
+  pageType="stage"
 >
 
   <!-- Page header -->
   <header class="page-header">
-    <div class="container">
-      <p class="page-header__eyebrow">
-        <a href={`/${s.route}`} style="color: inherit; text-decoration: none;">
-          French Way
-        </a>
-        &nbsp;·&nbsp; Stage {s.order}
-      </p>
-      <h1>{s.title}</h1>
-      <div class="page-header__meta">
-        <span class="page-header__meta-item">{distanceFormatted}</span>
-        <span class="page-header__meta-item">↑ {s.elevation_gain_m} m &nbsp; ↓ {s.elevation_loss_m} m</span>
-        <span class="page-header__meta-item">{s.estimated_time_h}</span>
-        {s.last_verified && (
-          <span class="page-header__meta-item" style="margin-left: auto; opacity: 0.6; font-size: 0.8rem;">
-            Verified {s.last_verified}
-          </span>
+    <div class="page-header__inner">
+      <div>
+        <div class="page-header__eyebrow">
+          <a href={`/${s.route}`}>{s.route === 'french-way' ? 'French Way' : s.route}</a>
+          <span class="page-header__eyebrow-sep cg-eyebrow">·</span>
+          <span class="cg-eyebrow">Stage {s.order}</span>
+        </div>
+
+        <!-- Mobile h1: stacked layout -->
+        <h1 class="hide-on-desktop">
+          {s.start_locality}
+          <span class="page-header__to">to</span>
+          {s.end_locality}
+        </h1>
+
+        <!-- Desktop h1: inline layout -->
+        <h1 class="hide-on-mobile">
+          {s.start_locality}
+          <span class="page-header__to">to</span>
+          {s.end_locality}
+        </h1>
+
+        {s.end_locality && (
+          <span class="page-header__alt cg-data"></span>
         )}
       </div>
+
+      <!-- Stats — desktop (right-aligned column) -->
+      <div class="page-header__stats hide-on-mobile">
+        <div class="page-header__stats-row">
+          <span class={`diff-badge diff-badge--${s.difficulty} diff-badge--lg`}>
+            <span class="diff-badge__dot"></span>
+            {difficultyLabel[s.difficulty]}
+          </span>
+          <span class="page-header__divider-desk"></span>
+          <div style="text-align: right;">
+            <div class="page-header__dist">{s.distance_km} km</div>
+            <div class="page-header__elev">{s.estimated_time_h} · {gainStr}</div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Stats — mobile (inline row) -->
+    <div class="page-header__stats hide-on-desktop">
+      <span class={`diff-badge diff-badge--${s.difficulty}`}>
+        <span class="diff-badge__dot"></span>
+        {difficultyLabel[s.difficulty]}
+      </span>
+      <span class="page-header__divider"></span>
+      <span class="page-header__dist">{s.distance_km} km</span>
+      <span class="page-header__elev">{gainStr} / {lossStr}</span>
+    </div>
+    <div class="page-header__time hide-on-desktop">{s.estimated_time_h} walking</div>
   </header>
 
-  <!-- Tab navigation -->
-  <nav class="tab-nav" aria-label="Stage sections">
-    <a
-      href={tabUrls.guide}
-      class="tab-nav__item"
-      aria-current={activeTab === 'guide' ? 'page' : undefined}
+  <!-- Map -->
+  <div class="map-area">
+    {s.map_embed ? (
+      <Fragment set:html={s.map_embed} />
+    ) : (
+      <div class="map-area__placeholder">Outdooractive · Map embed</div>
+    )}
+  </div>
+
+  <!-- Sticky tab bar -->
+  <div class="tab-bar tab-bar--3" role="tablist" id="stage-tabs">
+    <button
+      class="tab-bar__btn"
+      role="tab"
+      aria-selected={activeTab === 'guide' ? 'true' : 'false'}
+      data-tab="guide"
     >
       The Guide
-    </a>
-    <a
-      href={tabUrls.services}
-      class="tab-nav__item"
-      aria-current={activeTab === 'services' ? 'page' : undefined}
+    </button>
+    <button
+      class="tab-bar__btn"
+      role="tab"
+      aria-selected={activeTab === 'services' ? 'true' : 'false'}
+      data-tab="services"
     >
       Services
-    </a>
-    <a
-      href={tabUrls.culture}
-      class="tab-nav__item"
-      aria-current={activeTab === 'culture' ? 'page' : undefined}
+    </button>
+    <button
+      class="tab-bar__btn tab-bar__btn--soon"
+      role="tab"
+      aria-selected="false"
+      data-tab="culture"
     >
       Culture &amp; POIs
-    </a>
-  </nav>
+      <span class="tab-bar__soon">Soon</span>
+    </button>
+  </div>
 
-  <!-- Main content area -->
-  <div class="stage-layout">
+  <!-- Stage grid: sidebar (desktop) + article -->
+  <div class="stage-grid">
 
-    <!-- Sidebar: Technical data -->
-    <aside class="sidebar">
-      <p class="sidebar__title">Stage data</p>
-
-      <div class="sidebar__stat">
-        <span class="sidebar__stat-label">Distance</span>
-        <span class="sidebar__stat-value">{distanceFormatted}</span>
-      </div>
-      <div class="sidebar__stat">
-        <span class="sidebar__stat-label">Elevation gain</span>
-        <span class="sidebar__stat-value">↑ {s.elevation_gain_m} m</span>
-      </div>
-      <div class="sidebar__stat">
-        <span class="sidebar__stat-label">Elevation loss</span>
-        <span class="sidebar__stat-value">↓ {s.elevation_loss_m} m</span>
-      </div>
-      {s.max_slope_pct !== undefined && (
-        <div class="sidebar__stat">
-          <span class="sidebar__stat-label">Max slope</span>
-          <span class="sidebar__stat-value">{s.max_slope_pct}%</span>
+    <!-- Sidebar: visible on desktop only -->
+    <aside class="sidebar" aria-label="Stage data">
+      <div class="sidebar__title">Stage data</div>
+      {dataRows.map((row, i) => (
+        <div class={`sidebar__row${i === dataRows.length - 1 ? ' sidebar__row--last' : ''}`}>
+          <span class="sidebar__label">{row.label}</span>
+          <span class="sidebar__value">{row.value}</span>
         </div>
-      )}
-      {s.avg_slope_pct !== undefined && (
-        <div class="sidebar__stat">
-          <span class="sidebar__stat-label">Avg slope</span>
-          <span class="sidebar__stat-value">{s.avg_slope_pct}%</span>
-        </div>
-      )}
-      <div class="sidebar__stat">
-        <span class="sidebar__stat-label">Est. time</span>
-        <span class="sidebar__stat-value">{s.estimated_time_h}</span>
-      </div>
-      <div class="sidebar__stat">
-        <span class="sidebar__stat-label">Difficulty</span>
-        <span class="sidebar__stat-value">
-          <span class={`badge-difficulty badge-difficulty--${s.difficulty}`}>
+      ))}
+      <div class="sidebar__row">
+        <span class="sidebar__label">Difficulty</span>
+        <span class="sidebar__value">
+          <span class={`diff-badge diff-badge--${s.difficulty}`}>
+            <span class="diff-badge__dot"></span>
             {difficultyLabel[s.difficulty]}
           </span>
         </span>
       </div>
-      <div class="sidebar__stat">
-        <span class="sidebar__stat-label">From</span>
-        <span class="sidebar__stat-value">{s.start_locality}</span>
-      </div>
-      <div class="sidebar__stat">
-        <span class="sidebar__stat-label">To</span>
-        <span class="sidebar__stat-value">{s.end_locality}</span>
-      </div>
+      {s.last_verified && (
+        <div class="sidebar__row sidebar__row--last">
+          <span class="sidebar__label">Verified</span>
+          <span class="sidebar__value" style="font-size: 12px; color: var(--ink-3);">
+            {s.last_verified}
+          </span>
+        </div>
+      )}
     </aside>
 
-    <!-- Content slot -->
-    <article>
-      <slot />
+    <!-- Content article -->
+    <article class="stage-content">
 
-      <!-- Stage prev/next navigation -->
-      <nav class="stage-nav" aria-label="Adjacent stages">
+      <!-- Tab panel: The Guide -->
+      <div id="tab-guide" class="tab-panel" data-tab="guide" role="tabpanel">
+
+        <!-- Mobile collapsible data panel -->
+        <details class="data-panel">
+          <summary>
+            <div class="data-panel__label-row">
+              <span class="cg-eyebrow">Stage data</span>
+              <span class="data-panel__preview">{panelPreview}</span>
+            </div>
+            <span class="data-panel__icon" aria-hidden></span>
+          </summary>
+          <div class="data-panel__body">
+            {dataRows.map((row, i) => (
+              <div class={`data-panel__row${i === dataRows.length - 1 ? ' data-panel__row--last' : ''}`}>
+                <span class="data-panel__key">{row.label}</span>
+                <span class="data-panel__val">{row.value}</span>
+              </div>
+            ))}
+            <div class="data-panel__row">
+              <span class="data-panel__key">Difficulty</span>
+              <span class="data-panel__val">
+                <span class={`diff-badge diff-badge--${s.difficulty}`}>
+                  <span class="diff-badge__dot"></span>
+                  {difficultyLabel[s.difficulty]}
+                </span>
+              </span>
+            </div>
+            {s.last_verified && (
+              <div class="data-panel__row data-panel__row--last">
+                <span class="data-panel__key">Verified</span>
+                <span class="data-panel__val" style="font-size: 12px; color: var(--ink-3);">
+                  {s.last_verified}
+                </span>
+              </div>
+            )}
+          </div>
+        </details>
+
+        <!-- Guide content (from [slug].astro slot) -->
+        <slot />
+
+      </div>
+
+      <!-- Tab panel: Services -->
+      <div id="tab-services" class="tab-panel" data-tab="services" role="tabpanel" hidden>
+        <div class="coming-soon">
+          <div class="coming-soon__heading">Accommodation &amp; Services</div>
+          <p>Lodging data for this stage is being added. Check back soon.</p>
+          <div class="coming-soon__caption">In preparation — 2026</div>
+        </div>
+      </div>
+
+      <!-- Tab panel: Culture & POIs -->
+      <div id="tab-culture" class="tab-panel" data-tab="culture" role="tabpanel" hidden>
+        <div class="coming-soon">
+          <div class="coming-soon__heading">Culture &amp; POIs</div>
+          <p>Field notes on the churches, ruins, monasteries and small museums along this stage. In preparation.</p>
+          <div class="coming-soon__caption">Available to subscribers — Q3 2026</div>
+        </div>
+      </div>
+
+      <!-- Sequential navigation -->
+      <nav class="seq-nav" aria-label="Adjacent stages">
         {s.prev_stage_slug ? (
-          <a href={`/${s.route}/${s.prev_stage_slug}`} class="stage-nav__link stage-nav__link--prev">
-            <span class="stage-nav__label">← Previous stage</span>
-            <span class="stage-nav__title">{s.prev_stage_slug.replace(/-/g, ' ')}</span>
+          <a href={`/${s.route}/${s.prev_stage_slug}`} class="seq-nav__link">
+            <span class="seq-nav__label">← Previous</span>
+            <span class="seq-nav__title">
+              {prevStage?.data.title ?? s.prev_stage_slug.replace(/-/g, ' ')}
+            </span>
           </a>
-        ) : <span />}
-
+        ) : (
+          <span></span>
+        )}
+        <span class="seq-nav__divider"></span>
         {s.next_stage_slug ? (
-          <a href={`/${s.route}/${s.next_stage_slug}`} class="stage-nav__link stage-nav__link--next">
-            <span class="stage-nav__label">Next stage →</span>
-            <span class="stage-nav__title">{s.next_stage_slug.replace(/-/g, ' ')}</span>
+          <a href={`/${s.route}/${s.next_stage_slug}`} class="seq-nav__link seq-nav__link--next">
+            <span class="seq-nav__label">Next →</span>
+            <span class="seq-nav__title">
+              {nextStage?.data.title ?? s.next_stage_slug.replace(/-/g, ' ')}
+            </span>
           </a>
-        ) : <span />}
+        ) : (
+          <span></span>
+        )}
       </nav>
-    </article>
 
+    </article>
   </div>
 
 </BaseLayout>
+
+<!-- Tab switching -->
+<script>
+  const tabBar = document.getElementById('stage-tabs');
+  if (tabBar) {
+    const btns   = tabBar.querySelectorAll<HTMLButtonElement>('.tab-bar__btn');
+    const panels = document.querySelectorAll<HTMLElement>('.tab-panel');
+
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.tab;
+        btns.forEach(b => b.setAttribute('aria-selected', String(b === btn)));
+        panels.forEach(p => { p.hidden = p.dataset.tab !== target; });
+      });
+    });
+  }
+</script>
+
+<style>
+  /* Responsive visibility helpers (scoped to this layout) */
+  .hide-on-desktop { display: block; }
+  .hide-on-mobile  { display: none; }
+
+  @media (min-width: 900px) {
+    .hide-on-desktop { display: none; }
+    .hide-on-mobile  { display: block; }
+  }
+</style>
