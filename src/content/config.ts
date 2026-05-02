@@ -32,9 +32,9 @@ const stages = defineCollection({
     distance_km: z.number(),
     elevation_gain_m: z.number().int(),
     elevation_loss_m: z.number().int(),
-    max_slope_pct: z.number().optional(),
-    avg_slope_pct: z.number().optional(),
-    difficulty: z.enum(['easy', 'moderate', 'hard', 'very-hard']),
+    max_slope_pct: z.string().optional(),
+    avg_slope_pct: z.string().optional(),
+    difficulty: z.string(),
     estimated_time_h: z.string(),             // "6–8 hours"
 
     // Localities
