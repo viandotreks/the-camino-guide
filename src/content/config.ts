@@ -5,17 +5,18 @@ import { defineCollection, z } from 'astro:content';
 const routes = defineCollection({
   type: 'content',
   schema: z.object({
-    title: z.string(),                        // "The French Way"
+    title: z.string(),
     subtitle: z.string().optional(),
     total_distance_km: z.number(),
     total_stages: z.number(),
     difficulty: z.enum(['moderate', 'hard', 'very-hard']),
-    start_point: z.string(),                  // "Saint-Jean-Pied-de-Port"
-    end_point: z.string(),                    // "Santiago de Compostela"
-    country: z.array(z.string()),             // ["France", "Spain"]
-    seo_description: z.string().max(160),
+    start_point: z.string().optional(),
+    end_point: z.string().optional(),
+    country: z.array(z.string()).optional(),
+    coverImage: z.string().url().optional(),
+    seo_description: z.string().max(160).optional(),
     published: z.boolean().default(false),
-    last_verified: z.union([z.string(), z.date()]).optional(),     // ISO date "2025-03-01"
+    last_verified: z.union([z.string(), z.date()]).optional(),
   }),
 });
 
@@ -56,9 +57,11 @@ const stages = defineCollection({
     // culture_pois lives in body content or separate field — premium later
 
     // Meta
+    coverImage: z.string().url().optional(),
+    map_embed: z.string().optional(),
     seo_description: z.string().max(200).optional(),
     published: z.boolean().default(false),
-    last_verified: z.union([z.string(), z.date()]).optional(),    // ISO date
+    last_verified: z.union([z.string(), z.date()]).optional(),
   }),
 });
 
@@ -90,6 +93,7 @@ const localities = defineCollection({
     // Lodging section is a separate structured field or second .md
 
     // Meta
+    coverImage: z.string().url().optional(),
     seo_description: z.string().max(160).optional(),
     published: z.boolean().default(false),
     last_verified: z.union([z.string(), z.date()]).optional(),

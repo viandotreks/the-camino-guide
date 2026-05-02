@@ -1,0 +1,365 @@
+import { config } from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '..', '.env') });
+import { Client } from '@notionhq/client';
+import { NotionToMarkdown } from 'notion-to-md';
+import { S3Client, HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import sharp from 'sharp';
+import fs from 'fs';
+import path from 'path';
+
+// ─── ENV ─────────────────────────────────────────────────────────────────────
+
+const {
+  NOTION_API_KEY,
+  NOTION_ROUTES_DB,
+  NOTION_STAGES_DB,
+  NOTION_LOCALITIES_DB,
+  R2_ACCOUNT_ID,
+  R2_ACCESS_KEY_ID,
+  R2_SECRET_ACCESS_KEY,
+  R2_BUCKET_NAME,
+  R2_PUBLIC_URL,
+} = process.env;
+
+const missing = [
+  'NOTION_API_KEY', 'NOTION_ROUTES_DB', 'NOTION_STAGES_DB', 'NOTION_LOCALITIES_DB',
+  'R2_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET_NAME', 'R2_PUBLIC_URL',
+].filter(k => !process.env[k]);
+
+if (missing.length) {
+  console.error(`notion-build: missing env vars: ${missing.join(', ')}`);
+  process.exit(1);
+}
+
+// ─── CLIENTS ─────────────────────────────────────────────────────────────────
+
+const notion = new Client({ auth: NOTION_API_KEY });
+
+const n2m = new NotionToMarkdown({ notionClient: notion });
+
+const r2 = new S3Client({
+  region: 'auto',
+  endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: R2_ACCESS_KEY_ID!,
+    secretAccessKey: R2_SECRET_ACCESS_KEY!,
+  },
+});
+
+// ─── OUTPUT PATHS ────────────────────────────────────────────────────────────
+
+const OUT = {
+  routes:     'src/content/routes',
+  stages:     'src/content/stages',
+  localities: 'src/content/localities',
+};
+
+// ─── STATS ───────────────────────────────────────────────────────────────────
+
+let imagesUploaded = 0;
+let imagesSkipped  = 0;
+
+// ─── IMAGE PIPELINE ──────────────────────────────────────────────────────────
+
+async function processImage(notionUrl: string, r2Key: string): Promise<string> {
+  try {
+    await r2.send(new HeadObjectCommand({ Bucket: R2_BUCKET_NAME!, Key: r2Key }));
+    imagesSkipped++;
+    return `${R2_PUBLIC_URL}/${r2Key}`;
+  } catch {
+    // Not in R2 yet — download, convert, upload
+  }
+
+  let buffer: Buffer;
+  try {
+    const res = await fetch(notionUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    buffer = Buffer.from(await res.arrayBuffer());
+  } catch (err) {
+    console.warn(`  [img] download failed for ${r2Key}: ${err}`);
+    return notionUrl; // fallback to original (will break on next build if URL expires)
+  }
+
+  const webp = await sharp(buffer).webp({ quality: 85 }).toBuffer();
+
+  await r2.send(new PutObjectCommand({
+    Bucket: R2_BUCKET_NAME!,
+    Key: r2Key,
+    Body: webp,
+    ContentType: 'image/webp',
+  }));
+
+  imagesUploaded++;
+  return `${R2_PUBLIC_URL}/${r2Key}`;
+}
+
+// ─── NOTION HELPERS ──────────────────────────────────────────────────────────
+
+function text(page: any, name: string): string {
+  const p = page.properties[name];
+  if (!p) return '';
+  if (p.type === 'title')     return p.title.map((t: any)     => t.plain_text).join('');
+  if (p.type === 'rich_text') return p.rich_text.map((t: any) => t.plain_text).join('');
+  return '';
+}
+
+function num(page: any, name: string): number {
+  return page.properties[name]?.number ?? 0;
+}
+
+function select(page: any, name: string): string {
+  return page.properties[name]?.select?.name ?? '';
+}
+
+function multiSelect(page: any, name: string): string[] {
+  return page.properties[name]?.multi_select?.map((s: any) => s.name) ?? [];
+}
+
+function relationIds(page: any, name: string): string[] {
+  return page.properties[name]?.relation?.map((r: any) => r.id) ?? [];
+}
+
+function mapDifficulty(value: string): string {
+  const map: Record<string, string> = {
+    Moderate:  'moderate',
+    Demanding: 'hard',
+    Strenuous: 'very-hard',
+  };
+  return map[value] ?? 'moderate';
+}
+
+async function getCoverImage(page: any): Promise<string | null> {
+  const files = page.properties['Cover image']?.files;
+  if (!files?.length) return null;
+  const file = files[0];
+  const url  = file.type === 'external' ? file.external.url : file.file?.url;
+  if (!url) return null;
+  return processImage(url, `notion-cover/${page.id}.webp`);
+}
+
+// Cache database_id → data_source_id to avoid redundant retrieve calls
+const dataSourceIdCache = new Map<string, string>();
+
+async function getDataSourceId(databaseId: string): Promise<string> {
+  if (dataSourceIdCache.has(databaseId)) return dataSourceIdCache.get(databaseId)!;
+  const db = await notion.databases.retrieve({ database_id: databaseId }) as any;
+  const dsId: string = db.data_sources?.[0]?.id ?? databaseId;
+  dataSourceIdCache.set(databaseId, dsId);
+  return dsId;
+}
+
+async function queryAll(databaseId: string): Promise<any[]> {
+  const dataSourceId = await getDataSourceId(databaseId);
+  const pages: any[] = [];
+  let cursor: string | undefined;
+  do {
+    const res = await notion.dataSources.query({
+      data_source_id: dataSourceId,
+      filter: { property: 'Status', select: { equals: 'Published' } },
+      start_cursor: cursor,
+    });
+    pages.push(...res.results);
+    cursor = res.has_more ? res.next_cursor ?? undefined : undefined;
+  } while (cursor);
+  return pages;
+}
+
+// ─── RICH TEXT → MARKDOWN ────────────────────────────────────────────────────
+
+// Register image block transformer once — processes inline images through R2 pipeline
+n2m.setCustomTransformer('image', async (block: any) => {
+  const img = block.image;
+  const url  = img.type === 'external' ? img.external.url : img.file?.url;
+  if (!url) return '';
+  const r2Url  = await processImage(url, `notion-img/${block.id}.webp`);
+  const caption = img.caption?.map((c: any) => c.plain_text).join('') ?? '';
+  return `![${caption}](${r2Url})`;
+});
+
+async function toMarkdown(pageId: string): Promise<string> {
+  const blocks = await n2m.pageToMarkdown(pageId);
+  const { parent } = n2m.toMarkdownString(blocks);
+  return parent;
+}
+
+// ─── FRONTMATTER ─────────────────────────────────────────────────────────────
+
+function fm(data: Record<string, any>): string {
+  const lines = ['---'];
+  for (const [key, val] of Object.entries(data)) {
+    if (val === null || val === undefined) continue;
+    if (Array.isArray(val)) {
+      lines.push(`${key}:`);
+      val.forEach(v => lines.push(`  - ${JSON.stringify(v)}`));
+    } else if (typeof val === 'string' && val.includes('\n')) {
+      lines.push(`${key}: |`);
+      val.split('\n').forEach(line => lines.push(`  ${line}`));
+    } else {
+      lines.push(`${key}: ${JSON.stringify(val)}`);
+    }
+  }
+  lines.push('---');
+  return lines.join('\n');
+}
+
+function clearDir(dir: string): void {
+  if (fs.existsSync(dir)) {
+    fs.readdirSync(dir)
+      .filter(f => f.endsWith('.md'))
+      .forEach(f => fs.unlinkSync(path.join(dir, f)));
+  }
+  fs.mkdirSync(dir, { recursive: true });
+}
+
+// ─── ROUTES ──────────────────────────────────────────────────────────────────
+
+async function buildRoutes(): Promise<Map<string, string>> {
+  const pages = await queryAll(NOTION_ROUTES_DB!);
+  clearDir(OUT.routes);
+  const idToSlug = new Map<string, string>();
+
+  for (const page of pages) {
+    const slug = text(page, 'Slug');
+    if (!slug) { console.warn(`  [route] no slug on ${page.id}, skipping`); continue; }
+    idToSlug.set(page.id, slug);
+
+    const coverImage = await getCoverImage(page);
+    const body       = await toMarkdown(page.id);
+
+    const frontmatter = fm({
+      title:            text(page, 'Name'),
+      subtitle:         text(page, 'Summary') || undefined,
+      total_distance_km: num(page, 'Total km'),
+      total_stages:     num(page, 'Stages'),
+      difficulty:       mapDifficulty(select(page, 'Difficulty')),
+      country:          ['France', 'Spain'],
+      coverImage:       coverImage ?? undefined,
+      published:        true,
+    });
+
+    fs.writeFileSync(path.join(OUT.routes, `${slug}.md`), `${frontmatter}\n\n${body}`);
+    console.log(`  route: ${slug}`);
+  }
+
+  return idToSlug;
+}
+
+// ─── STAGES ──────────────────────────────────────────────────────────────────
+
+async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
+  const pages  = await queryAll(NOTION_STAGES_DB!);
+  const sorted = [...pages].sort((a, b) => num(a, 'Stage number') - num(b, 'Stage number'));
+  const slugs  = sorted.map(p => text(p, 'Slug'));
+  clearDir(OUT.stages);
+
+  for (let i = 0; i < sorted.length; i++) {
+    const page = sorted[i];
+    const slug = slugs[i];
+    if (!slug) { console.warn(`  [stage] no slug on ${page.id}, skipping`); continue; }
+
+    const routeIds  = relationIds(page, 'Route');
+    const routeSlug = routeIds.length ? (routeSlugMap.get(routeIds[0]) ?? '') : '';
+
+    const coverImage = await getCoverImage(page);
+    const body       = await toMarkdown(page.id);
+
+    // Split Watch out text into array items (one per non-empty line)
+    const watchOutText  = text(page, 'Watch out');
+    const watch_out_for = watchOutText
+      ? watchOutText.split('\n').map(s => s.trim()).filter(Boolean)
+      : [];
+
+    // max/avg grade stored as numbers in Notion, schema expects string (e.g. "12.5")
+    const maxGrade = num(page, 'Max grade');
+    const avgGrade = num(page, 'Avg grade');
+
+    const frontmatter = fm({
+      title:            text(page, 'Name'),
+      route:            routeSlug,
+      order:            num(page, 'Stage number'),
+      distance_km:      num(page, 'Distance km'),
+      elevation_gain_m: num(page, 'Elevation +'),
+      elevation_loss_m: num(page, 'Elevation -'),
+      max_slope_pct:    maxGrade ? String(maxGrade) : undefined,
+      avg_slope_pct:    avgGrade ? String(avgGrade) : undefined,
+      difficulty:       mapDifficulty(select(page, 'Difficulty')),
+      estimated_time_h: text(page, 'Estimated time') || undefined,
+      start_locality:   text(page, 'Start locality') || undefined,
+      end_locality:     text(page, 'End locality') || undefined,
+      prev_stage_slug:  slugs[i - 1] ?? null,
+      next_stage_slug:  slugs[i + 1] ?? null,
+      in_short:         text(page, 'In short'),
+      watch_out_for,
+      for_bikers:       text(page, 'For bikers') || undefined,
+      seo_description:  text(page, 'SEO description') || undefined,
+      coverImage:       coverImage ?? undefined,
+      published:        true,
+    });
+
+    fs.writeFileSync(path.join(OUT.stages, `${slug}.md`), `${frontmatter}\n\n${body}`);
+    console.log(`  stage ${num(page, 'Stage number')}: ${slug}`);
+  }
+}
+
+// ─── LOCALITIES ──────────────────────────────────────────────────────────────
+
+async function buildLocalities(routeSlugMap: Map<string, string>): Promise<void> {
+  const pages = await queryAll(NOTION_LOCALITIES_DB!);
+  clearDir(OUT.localities);
+
+  for (const page of pages) {
+    const slug = text(page, 'Slug');
+    if (!slug) { console.warn(`  [locality] no slug on ${page.id}, skipping`); continue; }
+
+    const routeIds  = relationIds(page, 'Route');
+    const routeSlug = routeIds.length ? (routeSlugMap.get(routeIds[0]) ?? '') : '';
+
+    const coverImage = await getCoverImage(page);
+    const body       = await toMarkdown(page.id);
+
+    const frontmatter = fm({
+      name:           text(page, 'Name'),
+      route:          routeSlug,
+      km_to_santiago: num(page, 'Km to Santiago'),
+      population:     num(page, 'Population') || undefined,
+      languages:      multiSelect(page, 'Languages'),
+      country:        'Spain',
+      has_albergue:   false,
+      has_hotel:      false,
+      has_atm:        false,
+      has_pharmacy:   false,
+      has_supermarket: false,
+      has_medical:    false,
+      coverImage:     coverImage ?? undefined,
+      published:      true,
+    });
+
+    fs.writeFileSync(path.join(OUT.localities, `${slug}.md`), `${frontmatter}\n\n${body}`);
+    console.log(`  locality: ${slug}`);
+  }
+}
+
+// ─── MAIN ────────────────────────────────────────────────────────────────────
+
+async function main() {
+  console.log('notion-build: fetching from Notion...');
+  const t0 = Date.now();
+
+  const routeSlugMap = await buildRoutes();
+  await buildStages(routeSlugMap);
+  await buildLocalities(routeSlugMap);
+
+  const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+  console.log(
+    `notion-build: done in ${elapsed}s — ` +
+    `${imagesUploaded} images uploaded, ${imagesSkipped} cached`,
+  );
+}
+
+main().catch(err => {
+  console.error('notion-build failed:', err);
+  process.exit(1);
+});

@@ -22,3 +22,8 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Generated content (populated at build time from Notion — do not edit manually)
+src/content/routes/
+src/content/stages/
+src/content/localities/
