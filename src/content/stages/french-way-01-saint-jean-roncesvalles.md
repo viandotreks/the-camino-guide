@@ -32,7 +32,6 @@ watch_out_for:
 for_bikers: "The Napoleon Route is not rideable for most cyclists — the terrain above Orisson is rough, steep, and exposed. Take the Valcarlos route (D933/N135) instead. It adds distance but is entirely road, and the descent into Roncesvalles from the Puerto de Ibañeta is genuinely enjoyable. No concession; just the right call."
 
 published: true
-last_verified: "2025-03-15"
 seo_description: "Stage 1 of the Camino Francés: Saint-Jean-Pied-de-Port to Roncesvalles. 25.1 km, 1,340 m elevation gain. Napoleon Route guide, conditions, and what to watch out for."
 ---
 
