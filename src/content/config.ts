@@ -58,7 +58,7 @@ const stages = defineCollection({
     // Meta
     seo_description: z.string().max(200).optional(),
     published: z.boolean().default(false),
-    last_verified: z.string().optional(),    // ISO date
+    last_verified: z.union([z.string(), z.date()]).optional(),    // ISO date
   }),
 });
 
@@ -92,7 +92,7 @@ const localities = defineCollection({
     // Meta
     seo_description: z.string().max(160).optional(),
     published: z.boolean().default(false),
-    last_verified: z.string().optional(),
+    last_verified: z.union([z.string(), z.date()]).optional(),
   }),
 });
 
