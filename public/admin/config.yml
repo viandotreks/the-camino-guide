@@ -5,8 +5,7 @@
 ## The CMS panel will be available at /admin once deployed.
 
 backend:
-  name: github
-  repo: viandotreks/the-camino-guide
+  name: git-gateway
   branch: main
 
 # Media uploads go into public/images so Astro serves them statically
