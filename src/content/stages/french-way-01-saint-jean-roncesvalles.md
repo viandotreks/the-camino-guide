@@ -1,26 +1,32 @@
 ---
-title: "Saint-Jean-Pied-de-Port to Roncesvalles"
+title: "Saint-Jean-Pied-de-Port to Roncesvalles through the Napoleon Route"
 route: "french-way"
 order: 1
 slug: "saint-jean-roncesvalles"
 
 distance_km: 25.1
-elevation_gain_m: 1340
-elevation_loss_m: 490
-max_slope_pct: 12
-avg_slope_pct: 7
-difficulty: "very-hard"
-estimated_time_h: "6–8 hours"
+elevation_gain_m: 1488
+elevation_loss_m: 711
+max_slope_pct: 30.1, -30.6
+avg_slope_pct: 8.8, -8.1
+difficulty: "●●●●● (hardest)"
+estimated_time_h: "7–8 hours"
 
-start_locality: "Saint-Jean-Pied-de-Port"
-end_locality: "Roncesvalles"
+start_locality: "Saint-Jean-Pied-de-Port / Donibane Garazi"
+end_locality: "Roncesvalles / Orreaga"
 start_locality_slug: "saint-jean-pied-de-port"
 end_locality_slug: "roncesvalles"
 
 prev_stage_slug: null
 next_stage_slug: "roncesvalles-zubiri"
 
-in_short: "This is one of the hardest stages on the French Way — and one of the most unforgettable. You cross the Pyrenees from France into Spain, climbing 1,300 meters before a long descent into the beech forest above Roncesvalles. There are two routes. This page covers the high route, the Napoleon Route, which you should only take in good conditions."
+in_short: "There are two ways to cross the Pyrenees from Saint-Jean-Pied-de-Port to Roncesvalles, on the other side of the mountains.
+
+The first is the Valcarlos / Luzaide variant — the historic Way of Le Puy (Via Podiensis in Latin) — which follows the valley road alongside the river Arnéguy (Arnegi in Basque).
+
+The other is the Napoleon Route, which climbs the Cize passes through the magnificent cols of Bentartea (1,337 m) and Lepoeder (1,430 m), cresting the high point of the entire French Way. The name recalls Napoleon's armies, which crossed here during the Peninsular War of 1808–1814.
+
+This page covers the Napoleon Route: harder than Valcarlos, but one of the most dramatic days of walking on the entire Camino, with truly spectacular views across the western Pyrenees. Note that the route closes between November 1 and March 1, when snow makes it impassable. For the Valcarlos option, see its dedicated page."
 
 watch_out_for:
   - "The Napoleon Route closes in adverse weather. Check with the pilgrim office in Saint-Jean the evening before — they will tell you which route is open. This is not a suggestion."
@@ -29,24 +35,38 @@ watch_out_for:
   - "Water is scarce on the high route. Fill up before leaving Saint-Jean and again at Orisson if you stop there. There is nothing reliable between Orisson and the descent into Roncesvalles."
   - "The descent from Lepoeder to Roncesvalles is steep and can be slippery. Take your time. Your knees will thank you the next morning."
 
-for_bikers: "The Napoleon Route is not rideable for most cyclists — the terrain above Orisson is rough, steep, and exposed. Take the Valcarlos route (D933/N135) instead. It adds distance but is entirely road, and the descent into Roncesvalles from the Puerto de Ibañeta is genuinely enjoyable. No concession; just the right call."
+for_bikers: "The full stage is rideable in technical terms, particularly the first section to the Urdanarre / Thibault Cross. That said, climbing the Cize passes isn't recommended without solid off-road cycling experience and confidence on rough terrain.
+
+The descent from Lepoeder through the Basajaunberro forest is genuinely dangerous, even on foot. If you're on the Napoleon Route, take the turn towards Ibañeta on the NA-2033 — it's the safe and sensible line down to Roncesvalles."
 
 published: true
 seo_description: "Stage 1 of the Camino Francés: Saint-Jean-Pied-de-Port to Roncesvalles. 25.1 km, 1,340 m elevation gain. Napoleon Route guide, conditions, and what to watch out for."
 ---
 
-Fill up at the fountain at the edge of town before you start — it's a reliable source and you may not see another until Orisson. The route leaves Saint-Jean through the Porte d'Espagne and climbs immediately. Give yourself a moment at the edge of town to look back. Most pilgrims don't.
+This is one of the hardest stages on the French Way — and one of the most unforgettable. Come prepared, physically and mentally: the climbing is relentless, and every hard-won meter of altitude brings the views into sharper relief.
 
-The first section follows a paved lane between farms, climbing steadily. The views open up quickly. By the time you reach Hunto — a small cluster of farm buildings at about 5 km — you can see the whole valley below and, on a clear morning, the mountains ahead.
+The stage begins at the Porte d'Espagne (0.0 km), following the D-428 road marked "Route de Napoléon". This road traces the ancient Via Aquitania, the Roman road connecting Burdigala (Bordeaux) and Asturica Augusta (Astorga). The first section climbs steadily to Hountto / Hunto (4.8 km, 498 m), home to the Ferme Ithurburia hostel.
 
-**Orisson** sits at around 790 meters, roughly 8 km from Saint-Jean. It is the only albergue on the high route, and it fills fast. Many pilgrims book it months in advance. If you haven't booked, don't count on a bed — but do stop for coffee and fill your water. The terrace has a view that earns the climb.
+Fill up at the fountain on the way out of the village — it's the last reliable water for a while. Shortly after, the Camino forks off onto a rough dirt track that winds up through the hillside; both routes reach the same point, but a second fork further on is worth noting: stay on the road there. Taking the dirt track adds unnecessary climbing and ends with a sharp descent into the Orisson refuge (7.2 km).
 
-Above Orisson, the path narrows and the road disappears. The next 10 kilometers are the heart of this stage: an open mountain landscape, nothing but grass, stone, and sky. In clear weather, the summit fully earns its Basque name — *Leizar Atheka*, the beautiful pass. In fog or wind, it's a different proposition.
+Orisson (792 m) has been a pilgrim stop since the Middle Ages, when a hospital stood here to serve travelers on what was then a genuinely dangerous crossing. Today it's a well-run refuge kept going by its hospitalier, Jean-Jacques, and the contributions of the pilgrims who sleep here.
 
-The **Urdanarre Cross** at the summit (1,430 m) is a natural stopping point. Leave something if you have something to leave. The tradition predates the pilgrimage, probably.
+Leaving Orisson, the gradient eases slightly as the route climbs through open mountain terrain, with the Arnéguy / Arnegi valley to the right and the Estérençuby / Ezterenzubi valley to the left. The views are already impressive. About 1 km from Orisson, the Borda hostel (8.2 km) marks the last services until Roncesvalles — stock up on food and water here. After another 3 km of climbing, a white statue appears on a rocky hilltop just off the path: the Virgin of Biakorri (10.9 km, 1,095 m), keeping watch over the western Pyrenees from her pedestal roughly halfway between Saint-Jean and Roncesvalles. Many pilgrims stop here to rest, to reflect, or simply to take in the extraordinary views opening out in every direction.
 
-The descent begins through the Ibañeta pass, where a small chapel marks the spot where, according to the Chanson de Roland, the rearguard of Charlemagne's army was ambushed. The historical record is messy — the attackers were almost certainly Basques, not Saracens, and the date is disputed — but the landscape gives you what the poem was reaching for. This is a place where armies died.
+The Camino continues parallel to the road through high meadows and the remains of the old path, reaching the Urdanarre Calvary (14.5 km) — also known in France as the Croix Thibaut, or Cross of Theobald — another traditional gathering point for votive offerings. Here the route leaves the D-428 for good, taking the dirt track to the right in continued ascent.
 
-Below Ibañeta, the forest takes over: beech, old and dense and quiet. The path drops steeply through Basajaunberro to the valley floor. Take it slowly. By this point your legs have been working for six or seven hours and the descent rewards no heroics.
+About 1.5 km from Urdanarre, the path reaches the Bentartea pass (16.3 km, 1,337 m). Here you'll find the so-called Fountain of Roland, installed in reference to the Chanson de Roland — the medieval epic that places a great battle somewhere near these passes. Charlemagne's army, ambushed while retreating from Zaragoza: Basques or Saracens, depending on the version, medieval propaganda being what it was. What's certain is that armies crossed here, that people died here, and that you are now doing it with trekking poles and a weather app. The mountain doesn't care about the difference.
 
-**Roncesvalles** appears at the bottom, more of a monastery complex than a village. The collegiate church is twelfth century, the cloister older in parts. The pilgrim hostel is the largest on the Camino — over 180 beds — and fills every evening in season. Check in, shower, eat. Tomorrow is easier.
+The path continues through dense beech forest alongside the wire fence marking the Spanish-French border, reaching the stone milestone at the entrance to Navarre and then the Lepoeder pass (20.0 km) — at 1,429 m, the highest point on the entire French Way.
+
+By the time you reach Lepoeder, you'll have climbed 1,257 m from Saint-Jean. In clear weather, the summit fully earns its Basque name — "beautiful hill" — with Roncesvalles / Orreaga visible just 4 km below and the full magnificence of the western Pyrenees spread out around you.
+
+From Lepoeder, two routes lead down to Roncesvalles: straight on through the beech forest of Basajaunberro (a steep 500 m descent), or a right turn towards the Ibañeta pass and the road.
+
+### Through the beech forest of Basajaunberro
+
+Follow the white and red GR markers carefully — it's easy to lose the path in this dense forest, especially in fog. The slopes are steep and the ground slippery; this is where trekking poles earn their keep. The 4 km of descent brings you directly into Roncesvalles / Orreaga (24.0 km), entering the village from the east.
+
+### Through the Ibañeta pass
+
+The safer option, and only 400 meters longer. From Lepoeder, turn right onto the NA-2033 and follow it for just over 2.5 km to the Ibañeta pass (22.5 km), where pilgrims arriving via the Valcarlos route join the trail. From there the Camino runs close to but off the road for another 2 km, entering the village from the north (24.4 km) and depositing you beside the great stone mass of the collegiate church. The first walls you see are actually those of the pilgrims' hostel — walk around the back of both to reach the N-135 and the heart of Roncesvalles.
