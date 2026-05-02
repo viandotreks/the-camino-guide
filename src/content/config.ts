@@ -15,7 +15,7 @@ const routes = defineCollection({
     country: z.array(z.string()),             // ["France", "Spain"]
     seo_description: z.string().max(160),
     published: z.boolean().default(false),
-    last_verified: z.string().optional(),     // ISO date "2025-03-01"
+    last_verified: z.union([z.string(), z.date()]).optional(),     // ISO date "2025-03-01"
   }),
 });
 
