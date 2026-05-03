@@ -1438,8 +1438,8 @@ body.menu-open {
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--color-green, #2d6a4f);
-  background: rgba(45,106,79,0.1);
+  color: #e77067;
+  background: rgba(231,112,103,0.1);
   padding: 3px 8px;
   border-radius: 4px;
 }
