@@ -23,7 +23,9 @@ const s = stage.data;
   <!-- In short -->
   <section class="in-short-section">
     <h2 class="section-eyebrow section-eyebrow--accent">In short</h2>
-    <p class="in-short-text">{s.in_short}</p>
+    {s.in_short.split(/\n+/).filter(Boolean).map(para => (
+      <p class="in-short-text">{para}</p>
+    ))}
   </section>
 
   <!-- Watch out for -->
