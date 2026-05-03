@@ -23,9 +23,7 @@ const s = stage.data;
   <!-- In short -->
   <section class="in-short-section">
     <h2 class="section-eyebrow section-eyebrow--accent">In short</h2>
-    {s.in_short.split(/\n+/).filter(Boolean).map(para => (
-      <p class="in-short-text">{para}</p>
-    ))}
+    <div class="in-short-text" set:html={s.in_short} />
   </section>
 
   <!-- Watch out for -->
@@ -36,7 +34,7 @@ const s = stage.data;
         <span class="watch-out__heading">Watch out for</span>
       </div>
       <ul class="watch-out__list">
-        {s.watch_out_for.map(item => <li>{item}</li>)}
+        {s.watch_out_for.map(item => <li set:html={item} />)}
       </ul>
     </aside>
   )}
@@ -61,7 +59,7 @@ const s = stage.data;
         </svg>
         <span class="for-bikers__heading">For bikers</span>
       </div>
-      <p>{s.for_bikers}</p>
+      <div set:html={s.for_bikers} />
     </aside>
   )}
 

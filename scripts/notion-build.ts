@@ -106,6 +106,58 @@ function text(page: any, name: string): string {
   return '';
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Convert a Notion rich_text array to an HTML string, preserving inline annotations.
+// With paragraphs: true, splits on \n to wrap each segment in <p>.
+function richTextToHtml(richText: any[], paragraphs = false): string {
+  const inline = richText.map(item => {
+    let t = escapeHtml(item.plain_text);
+    const a = item.annotations;
+    if (a.code)          t = `<code>${t}</code>`;
+    if (a.bold)          t = `<strong>${t}</strong>`;
+    if (a.italic)        t = `<em>${t}</em>`;
+    if (a.strikethrough) t = `<s>${t}</s>`;
+    if (a.underline)     t = `<u>${t}</u>`;
+    return t;
+  }).join('');
+
+  if (!paragraphs) return inline;
+  return inline.split(/\n+/).filter(s => s.trim()).map(p => `<p>${p}</p>`).join('');
+}
+
+function html(page: any, name: string, paragraphs = false): string {
+  const p = page.properties[name];
+  if (!p) return '';
+  if (p.type === 'rich_text') return richTextToHtml(p.rich_text, paragraphs);
+  if (p.type === 'title')     return richTextToHtml(p.title, paragraphs);
+  return '';
+}
+
+// Split a rich_text array on \n boundaries, returning one HTML string per line.
+// Handles annotations that span across a newline correctly.
+function richTextToLines(richText: any[]): string[] {
+  const lines: string[] = [''];
+  for (const item of richText) {
+    const parts = item.plain_text.split('\n');
+    for (let i = 0; i < parts.length; i++) {
+      if (i > 0) lines.push('');
+      if (!parts[i]) continue;
+      let t = escapeHtml(parts[i]);
+      const a = item.annotations;
+      if (a.code)          t = `<code>${t}</code>`;
+      if (a.bold)          t = `<strong>${t}</strong>`;
+      if (a.italic)        t = `<em>${t}</em>`;
+      if (a.strikethrough) t = `<s>${t}</s>`;
+      if (a.underline)     t = `<u>${t}</u>`;
+      lines[lines.length - 1] += t;
+    }
+  }
+  return lines.filter(l => l.trim());
+}
+
 function num(page: any, name: string): number {
   const p = page.properties[name];
   if (!p) return 0;
@@ -305,10 +357,8 @@ async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
     const coverImage = await getCoverImage(page);
     const body       = await toMarkdown(page.id);
 
-    const watchOutText  = text(page, 'Watch out');
-    const watch_out_for = watchOutText
-      ? watchOutText.split('\n').map(s => s.trim()).filter(Boolean)
-      : [];
+    // watch_out_for: split rich_text on newlines, preserving inline formatting per line
+    const watch_out_for = richTextToLines(page.properties['Watch out']?.rich_text ?? []);
 
     // Grade fields: numbers in Notion, strings in schema (appended with % in template)
     const maxUp   = num(page, 'Max grade');
@@ -342,9 +392,9 @@ async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
       map_url:            mapUrl,
       prev_stage_slug:    slugs[i - 1] ?? null,
       next_stage_slug:    slugs[i + 1] ?? null,
-      in_short:           text(page, 'In short'),
+      in_short:           html(page, 'In short', true),
       watch_out_for,
-      for_bikers:         text(page, 'For bikers') || undefined,
+      for_bikers:         html(page, 'For bikers', true) || undefined,
       seo_description:    text(page, 'SEO description') || undefined,
       coverImage:         coverImage ?? undefined,
       published:          true,
