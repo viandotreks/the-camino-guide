@@ -156,16 +156,16 @@ const nextStage = s.next_stage_slug
       </div>
     </div>
 
-    <!-- Stats — mobile (inline row) -->
+    <!-- Stats — mobile (single line: difficulty · distance · ETA) -->
     <div class="page-header__stats hide-on-desktop">
       <span class={`diff-badge diff-badge--${diffClass}`}>
         {s.difficulty}
       </span>
       <span class="page-header__divider"></span>
       <span class="page-header__dist">{s.distance_km} km</span>
-      <span class="page-header__elev">{gainStr} / {lossStr}</span>
+      <span class="page-header__divider"></span>
+      <span class="page-header__time">{s.estimated_time_h}</span>
     </div>
-    <div class="page-header__time hide-on-desktop">{s.estimated_time_h} walking</div>
   </header>
 
   <!-- Map -->
