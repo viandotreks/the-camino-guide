@@ -516,6 +516,7 @@ button { font-family: inherit; cursor: pointer; }
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  flex: 1;
 }
 .data-panel__preview {
   font-family: var(--sans);
