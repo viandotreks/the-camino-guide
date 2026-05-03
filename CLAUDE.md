@@ -22,6 +22,7 @@ The project is in active development. The French Way (Camino Francés) is the fi
 | Hosting | Cloudflare Pages |
 | Media storage | Cloudflare R2 |
 | Deploy trigger | Notion formula link → Cloudflare deploy hook |
+| Search | Pagefind (static index, built at deploy time) |
 
 **No Netlify. No Decap CMS. No Netlify Identity.**
 
@@ -36,7 +37,7 @@ Lives in Notion. Fetched at build time via Notion API. Never stored in the GitHu
 Notion (English databases) → build script → Astro → Cloudflare Pages
 ```
 
-### 2. Site structure (homepage, About, Services page, legal pages)
+### 2. Site structure (homepage, listing pages, services page, search)
 Lives in GitHub as `.astro` files. Edited in Claude sessions when needed.
 
 ```
@@ -51,31 +52,22 @@ Claude session → GitHub push → Cloudflare Pages rebuild
 the-camino-guide/
 ├── src/
 │   ├── pages/
-│   │   ├── index.astro              ← Homepage (reads from Notion Site settings singleton)
-│   │   ├── about.astro
-│   │   ├── services.astro           ← Viando baggage service integration
-│   │   ├── preparation/
-│   │   │   └── index.astro          ← Gear, packing, training (Amazon affiliate content)
-│   │   ├── [route]/
-│   │   │   ├── index.astro          ← Route pillar page
-│   │   │   ├── [stage].astro        ← Stage page template
-│   │   │   └── [locality].astro     ← Locality page template
-│   │   └── legal/
-│   │       ├── privacy.astro
-│   │       └── terms.astro
-│   ├── components/
-│   │   ├── Header.astro
-│   │   ├── Footer.astro
-│   │   ├── TabNav.astro             ← The Guide / Services / Culture & POIs tabs
-│   │   ├── TechnicalData.astro      ← Sidebar: distance km+mi, elevation, grade, difficulty
-│   │   ├── StageCard.astro          ← Used in route pillar page
-│   │   └── LocalityCard.astro
+│   │   ├── index.astro              ← Homepage
+│   │   ├── routes.astro             ← All routes listing
+│   │   ├── localities.astro         ← All localities listing (grouped by route)
+│   │   ├── services.astro           ← Viando services page (luggage transfer, trip planning)
+│   │   ├── search.astro             ← Search results page (/search?q=)
+│   │   └── [route]/
+│   │       ├── index.astro          ← Route pillar page
+│   │       └── [slug].astro         ← Stage or locality page (resolved at build time)
 │   ├── layouts/
-│   │   ├── BaseLayout.astro
-│   │   ├── StageLayout.astro
-│   │   └── LocalityLayout.astro
-│   └── styles/
-│       └── global.css               ← Includes .km-marker class
+│   │   ├── BaseLayout.astro         ← Shell: nav, mobile drawer, search modal, footer
+│   │   ├── StageLayout.astro        ← Stage page template
+│   │   └── LocalityLayout.astro     ← Locality page template
+│   ├── styles/
+│   │   └── global.css               ← Design system, km-marker, mobile drawer, search UI
+│   └── content/
+│       └── generated/               ← Output of notion-build.ts — gitignored
 ├── scripts/
 │   └── notion-build.ts              ← THE CRITICAL SCRIPT — see below
 ├── public/
@@ -83,6 +75,23 @@ the-camino-guide/
 ├── package.json
 └── .env                             ← Never commit this
 ```
+
+---
+
+## Build scripts
+
+```json
+"scripts": {
+  "prebuild": "tsx scripts/notion-build.ts",
+  "build":    "astro build",
+  "postbuild":"pagefind --site dist",
+  "dev":      "astro dev"
+}
+```
+
+Order: `notion-build.ts` → `astro build` → `pagefind --site dist`
+
+The Pagefind index is generated into `dist/pagefind/` and served as static files. In dev mode, `/pagefind/pagefind.js` does not exist — search shows "only available on published site".
 
 ---
 
@@ -110,17 +119,6 @@ Cover images use `notion-cover/{pageId}.webp` as key (page ID, not block ID).
 - Rich text inline code (backtick-wrapped) → `<span class="km-marker">text</span>`
 - Stage ordering: main stages sorted by `Stage number`; alternatives (Track type = Alternative) interleaved after their parent stage identified by `Branch from`
 - Services grouped by stage slug, sorted by `Km marker` ascending
-
-### Prebuild step
-```json
-"scripts": {
-  "prebuild": "tsx scripts/notion-build.ts",
-  "build": "astro build",
-  "dev": "astro dev"
-}
-```
-
-Generated files go to `src/content/generated/` — this directory is gitignored.
 
 ---
 
@@ -211,106 +209,87 @@ One click triggers a Cloudflare build. The site updates in 2–3 minutes.
 
 ```
 /                                     Homepage
+/routes                               All routes listing
+/localities                           All localities listing (grouped by route)
+/services                             Viando services page
+/search?q=<query>                     Search results (Pagefind)
 /french-way/                          Route pillar page
 /french-way/saint-jean-roncesvalles   Stage page
 /french-way/roncesvalles              Locality page
-/about/
-/services/
-/preparation/
-/legal/privacy/
-/legal/terms/
 ```
 
 Slugs come from the `Slug` field in each Notion database. Must be lowercase, hyphenated, no special characters.
 
 ---
 
-## Astro content collection schemas
+## Navigation
 
-### Route
-```typescript
-const routesCollection = defineCollection({
-  schema: z.object({
-    name: z.string(),
-    slug: z.string(),
-    summary: z.string(),
-    totalKm: z.number(),
-    stages: z.number(),
-    difficulty: z.string(),
-    coverImage: z.string().url().optional(),
-  })
-});
+### Desktop nav (`site-nav`)
+Horizontal bar: logo left · links (Routes / Localities / Services) · search icon + EN + Subscribe right.
+Active link marked with `aria-current="page"` via `activeRoute` prop on `BaseLayout`.
+
+### Mobile chrome (`site-chrome`)
+Single line: logo left · breadcrumb + hamburger right.
+Hamburger opens the **mobile drawer**.
+
+### Mobile drawer (`mobile-menu`)
+Slides in from the right. Contains:
+1. Search input (form with `action="/search" name="q"`) — Enter navigates to search results
+2. Nav links: Routes / Localities / Services
+3. Footer: EN + Subscribe
+
+Controlled via JS in `BaseLayout.astro`: `openMenu()` / `closeMenu()`. Closes on backdrop click or Escape key.
+
+### Desktop search modal
+Triggered by magnifier icon in `site-nav__right`. Floating modal centred below the nav. Input submits to `/search?q=`.
+
+---
+
+## Search (Pagefind)
+
+Pagefind generates a static full-text index at build time (`postbuild` step). The index is served from `/pagefind/`.
+
+### What is indexed
+Only editorial prose — `data-pagefind-ignore` is applied to all UI chrome:
+- `BaseLayout`: header (`site-chrome`), nav (`site-nav`), footer, mobile drawer, search modal
+- `StageLayout`: page header, map area, tab bar, sidebar, data panel, services tab, culture tab, seq-nav
+- `LocalityLayout`: page header, map area, tab bar, lodging tab
+- `[route]/index.astro`: route header, stage list
+
+What IS indexed: the `<slot />` content (Step by Step narrative, In Short, Watch Out for) and locality guide prose.
+
+### Page type meta
+Each layout adds a hidden span for the type badge in search results:
+```html
+<span data-pagefind-meta="type:Stage" hidden></span>
+<span data-pagefind-meta="type:Locality" hidden></span>
+<span data-pagefind-meta="type:Route" hidden></span>
 ```
 
-### Stage
-```typescript
-const stagesCollection = defineCollection({
-  schema: z.object({
-    name: z.string(),
-    slug: z.string(),
-    route: z.string(),
-    stageNumber: z.number(),
-    distanceKm: z.number(),
-    distanceMi: z.number().optional(),
-    elevationUp: z.number(),
-    elevationDown: z.number(),
-    maxGrade: z.number().optional(),
-    avgGrade: z.number().optional(),
-    maxGradeDown: z.number().optional(),
-    avgGradeDown: z.number().optional(),
-    difficulty: z.string(),
-    estimatedTime: z.string().optional(),
-    startLocality: z.string().optional(),
-    endLocality: z.string().optional(),
-    seoDescription: z.string().optional(),
-    mapUrl: z.string().url().optional(),
-    trackType: z.enum(['Main', 'Alternative']).optional(),
-    branchFrom: z.number().optional(),
-    inShort: z.string(),
-    watchOut: z.string().optional(),
-    forBikers: z.string().optional(),
-    servicesIntro: z.string().optional(),
-    services: z.array(z.object({
-      name: z.string(),
-      type: z.array(z.string()),
-      kmMarker: z.number().optional(),
-      location: z.string().optional(),
-      description: z.string().optional(),
-      address: z.string().optional(),
-      phone: z.string().optional(),
-      website: z.string().optional(),
-      bookingUrl: z.string().optional(),
-    })).optional(),
-    // stepByStep is the markdown body
-  })
-});
+### Dynamic import pattern
+Pagefind is loaded lazily to avoid Vite static analysis errors in dev:
+```js
+const dynamicImport = new Function('p', 'return import(p)');
+const pf = await dynamicImport('/pagefind/pagefind.js');
 ```
+Do NOT use `import('/pagefind/pagefind.js')` directly — Vite will try to resolve it at build time and fail.
 
-### Locality
-```typescript
-const localitiesCollection = defineCollection({
-  schema: z.object({
-    name: z.string(),
-    slug: z.string(),
-    route: z.string(),
-    kmToSantiago: z.number(),
-    population: z.number().optional(),
-    languages: z.array(z.string()).optional(),
-    coverImage: z.string().url().optional(),
-    // theGuide is the markdown body
-  })
-});
-```
+### Search results page (`/search`)
+- Reads `?q=` from URL on load and runs search immediately
+- Results: card per result, badge (Stage / Locality / Route) + title only — no excerpt
+- Result styles are in `global.css` (not scoped) because they're injected via `innerHTML`
 
 ---
 
 ## Design system
 
-**Fonts**: Lora (headings, serif) + Source Sans 3 (body, sans-serif)
-**Palette**: Forest green (primary) + Amber (accent)
-**Approach**: Mobile-first. No unnecessary JavaScript.
+**Fonts**: Source Serif 4 (headings, serif) + Inter (body, sans-serif)
+**Palette**:
+- `#e77067` — brand accent (terracotta/coral) — used for CTAs, badges, icons, links
+- Forest green — secondary (nav active states, focus rings)
+**Approach**: Mobile-first. Minimal JavaScript (only nav drawer + search).
 
-### Tab navigation
+### Tab navigation (stage/locality pages)
 - Tab 1: The Guide (always free)
 - Tab 2: Services (accommodation and services along the route — always free)
 - Tab 3: Culture & POIs (future premium content — shows "Soon")
@@ -405,4 +384,7 @@ The voice reference document (`camino-guide-voice-reference.md`) is the definiti
 - ✅ Deploy hook configured — formula link in Notion Site Settings
 - ✅ Stage 1 (Saint-Jean → Roncesvalles) content live, Services tab rendering
 - ✅ Services database: icon key, intro text, grouped by km marker with location label
+- ✅ Navigation: mobile drawer + desktop search modal, nav links = Routes / Localities / Services
+- ✅ Search: Pagefind integration, `/search?q=` results page with type badges
+- ✅ Listing pages: `/routes`, `/localities`, `/services`
 - ⏳ Domain `thecaminoguide.com` still at Dinahosting — migrate to Cloudflare when content is ready to launch
