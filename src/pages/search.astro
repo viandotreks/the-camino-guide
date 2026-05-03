@@ -145,14 +145,22 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .search-page__result-title {
     display: block;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.95rem;
     margin-bottom: 0.25rem;
+    color: var(--color-text, #1a1a1a);
+    word-break: break-word;
   }
 
   .search-page__result-excerpt {
     display: block;
     font-size: 0.875rem;
-    opacity: 0.6;
+    color: rgba(0,0,0,0.55);
     line-height: 1.5;
+  }
+
+  .search-page__result-excerpt mark {
+    background: transparent;
+    font-weight: 600;
+    color: var(--color-green, #2d6a4f);
   }
 </style>

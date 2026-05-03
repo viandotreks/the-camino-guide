@@ -1260,15 +1260,23 @@ body.menu-open {
 .search-result__title {
   display: block;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   margin-bottom: 0.2rem;
+  color: var(--color-text, #1a1a1a);
+  word-break: break-word;
 }
 
 .search-result__excerpt {
   display: block;
-  font-size: 0.85rem;
-  opacity: 0.65;
+  font-size: 0.8rem;
+  color: rgba(0,0,0,0.55);
   line-height: 1.4;
+}
+
+.search-result__excerpt mark {
+  background: transparent;
+  font-weight: 600;
+  color: var(--color-green, #2d6a4f);
 }
 
 .search-empty {
