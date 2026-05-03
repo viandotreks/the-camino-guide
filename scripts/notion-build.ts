@@ -125,6 +125,7 @@ function richTextToHtml(richText: any[], paragraphs = false): string {
     if (a.italic)        t = `<em>${t}</em>`;
     if (a.strikethrough) t = `<s>${t}</s>`;
     if (a.underline)     t = `<u>${t}</u>`;
+    if (item.href)       t = `<a href="${escapeHtml(item.href)}" target="_blank" rel="noopener noreferrer">${t}</a>`;
     return t;
   }).join('');
 
@@ -156,6 +157,7 @@ function richTextToLines(richText: any[]): string[] {
       if (a.italic)        t = `<em>${t}</em>`;
       if (a.strikethrough) t = `<s>${t}</s>`;
       if (a.underline)     t = `<u>${t}</u>`;
+      if (item.href)       t = `<a href="${escapeHtml(item.href)}" target="_blank" rel="noopener noreferrer">${t}</a>`;
       lines[lines.length - 1] += t;
     }
   }
