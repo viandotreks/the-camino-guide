@@ -300,10 +300,7 @@ const nextStage = s.next_stage_slug
                   {group.items.map(svc => (
                     <li class="svc-card">
                       <p class="svc-card__body">
-                        <span class="svc-card__icons" set:html={svc.type.map(typeIconSvg).join('')} />
-                        {' '}<strong class="svc-card__name">{svc.name}</strong>
-                        {svc.address  && <span class="svc-card__addr">{'. '}{svc.address}</span>}
-                        {svc.description && <span class="svc-card__desc">{'. '}{svc.description}</span>}
+                        <span class="svc-card__icons" set:html={svc.type.map(typeIconSvg).join(' ')} />{' '}<strong class="svc-card__name">{svc.name}</strong>{svc.address ? <span class="svc-card__addr">{svc.address}</span> : null}{svc.description ? <span class="svc-card__desc">{svc.description}</span> : null}
                         {(svc.phone || svc.booking_url || svc.website) && (
                           <span class="svc-card__links">
                             {svc.phone && (
@@ -462,6 +459,11 @@ const nextStage = s.next_stage_slug
 
   .svc-card__name {
     font-weight: 700;
+  }
+
+  .svc-card__addr::before,
+  .svc-card__desc::before {
+    content: '. ';
   }
 
   .svc-card__addr {
