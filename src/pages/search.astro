@@ -1,0 +1,158 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Search"
+  description="Search stages, towns, and routes on The Camino Guide."
+>
+  <div class="search-page">
+    <h1 class="search-page__title">Search</h1>
+
+    <form class="search-page__form" id="search-page-form" role="search">
+      <input
+        type="search"
+        id="search-page-input"
+        class="search-page__input"
+        placeholder="Search stages, towns, routes…"
+        autocomplete="off"
+        aria-label="Search the site"
+      />
+      <button type="submit" class="search-page__btn">Search</button>
+    </form>
+
+    <div id="search-page-results" class="search-page__results"></div>
+  </div>
+</BaseLayout>
+
+<script>
+  const input   = document.getElementById('search-page-input') as HTMLInputElement;
+  const results = document.getElementById('search-page-results') as HTMLElement;
+  const form    = document.getElementById('search-page-form') as HTMLFormElement;
+
+  const params = new URLSearchParams(window.location.search);
+  const query  = params.get('q') ?? '';
+
+  if (query && input) {
+    input.value = query;
+    runSearch(query);
+  }
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = input?.value.trim();
+    if (q) {
+      window.history.replaceState({}, '', `/search?q=${encodeURIComponent(q)}`);
+      runSearch(q);
+    }
+  });
+
+  input?.addEventListener('input', () => {
+    const q = input.value.trim();
+    if (q) {
+      window.history.replaceState({}, '', `/search?q=${encodeURIComponent(q)}`);
+      runSearch(q);
+    } else {
+      results.innerHTML = '';
+    }
+  });
+
+  async function runSearch(q: string) {
+    results.innerHTML = '<p class="search-page__status">Searching…</p>';
+    try {
+      const dynamicImport = new Function('p', 'return import(p)');
+      const pf = await dynamicImport('/pagefind/pagefind.js');
+      await pf.init();
+      const search = await pf.search(q);
+      const data   = await Promise.all(search.results.map((r: any) => r.data()));
+      renderResults(data);
+    } catch {
+      results.innerHTML = '<p class="search-page__status">Search is only available on the published site.</p>';
+    }
+  }
+
+  function renderResults(data: any[]) {
+    if (!data.length) {
+      results.innerHTML = '<p class="search-page__status">No results for this search.</p>';
+      return;
+    }
+    results.innerHTML = data
+      .map(r => `
+        <a class="search-page__result" href="${r.url}">
+          <span class="search-page__result-title">${r.meta?.title ?? 'Page'}</span>
+          <span class="search-page__result-excerpt">${r.excerpt}</span>
+        </a>
+      `)
+      .join('');
+  }
+</script>
+
+<style>
+  .search-page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+  }
+
+  .search-page__title {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .search-page__form {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+
+  .search-page__input {
+    flex: 1;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 6px;
+    font-size: 1rem;
+    outline: none;
+  }
+  .search-page__input:focus { border-color: var(--color-green, #2d6a4f); }
+
+  .search-page__btn {
+    padding: 0.7rem 1.25rem;
+    background: var(--color-green, #2d6a4f);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  .search-page__status {
+    color: rgba(0,0,0,0.5);
+    font-size: 0.95rem;
+  }
+
+  .search-page__result {
+    display: block;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    text-decoration: none;
+    color: inherit;
+  }
+  .search-page__result:last-child { border-bottom: none; }
+  .search-page__result:hover .search-page__result-title {
+    color: var(--color-green, #2d6a4f);
+  }
+
+  .search-page__result-title {
+    display: block;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .search-page__result-excerpt {
+    display: block;
+    font-size: 0.875rem;
+    opacity: 0.6;
+    line-height: 1.5;
+  }
+</style>

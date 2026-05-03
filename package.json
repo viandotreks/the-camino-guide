@@ -6,6 +6,7 @@
     "dev": "astro dev",
     "prebuild": "tsx scripts/notion-build.ts",
     "build": "astro build",
+    "postbuild": "pagefind --site dist",
     "preview": "astro preview",
     "astro": "astro"
   },
@@ -15,6 +16,7 @@
     "@notionhq/client": "^5.20.0",
     "astro": "^4.16.0",
     "notion-to-md": "^3.1.9",
+    "pagefind": "^1.5.2",
     "sharp": "^0.34.5"
   },
   "devDependencies": {
