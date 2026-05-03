@@ -11,24 +11,37 @@ interface Props {
 const { stage, activeTab = 'guide' } = Astro.props;
 const s = stage.data;
 
-const difficultyLabel: Record<string, string> = {
-  easy:        'Easy',
-  moderate:    'Moderate',
-  hard:        'Hard',
-  'very-hard': 'Very Hard',
+// CSS class for diff-badge — derived from raw Notion bullet value
+const difficultyClass: Record<string, string> = {
+  '●●●●● (hardest)': 'very-hard',
+  '●●●●○ (hard)':    'hard',
+  '●●●○○ (medium)':  'moderate',
+  '●●○○○ (easy)':    'easy',
+  '●○○○○ (easiest)': 'easiest',
 };
+const diffClass = difficultyClass[s.difficulty] ?? 'moderate';
 
 // Format elevation
 const gainStr = `+${s.elevation_gain_m.toLocaleString('en-US')} m`;
 const lossStr = `−${s.elevation_loss_m.toLocaleString('en-US')} m`;
 
+// Format grade: show "+X% / −Y%" when both directions available
+function gradeValue(up?: string | null, down?: string | null): string | null {
+  if (!up && !down) return null;
+  return [up ? `+${up}%` : null, down ? `−${down}%` : null].filter(Boolean).join(' / ');
+}
+
 // Sidebar / panel rows
+const distStr = s.distance_mi ? `${s.distance_km} km · ${s.distance_mi} mi` : `${s.distance_km} km`;
+const maxGradeStr = gradeValue(s.max_slope_pct, s.max_slope_pct_down);
+const avgGradeStr = gradeValue(s.avg_slope_pct, s.avg_slope_pct_down);
+
 const dataRows = [
-  { label: 'Distance',    value: `${s.distance_km} km` },
+  { label: 'Distance',    value: distStr },
   { label: 'Elev. gain',  value: gainStr },
   { label: 'Elev. loss',  value: lossStr },
-  s.max_slope_pct != null ? { label: 'Max grade', value: `${s.max_slope_pct}%` } : null,
-  s.avg_slope_pct != null ? { label: 'Avg grade', value: `${s.avg_slope_pct}%` } : null,
+  maxGradeStr ? { label: 'Max grade', value: maxGradeStr } : null,
+  avgGradeStr ? { label: 'Avg grade', value: avgGradeStr } : null,
   { label: 'Walking',     value: s.estimated_time_h },
 ].filter(Boolean) as { label: string; value: string }[];
 
@@ -46,7 +59,7 @@ const nextStage = s.next_stage_slug
 
 <BaseLayout
   title={s.title}
-  description={s.seo_description ?? `Stage guide: ${s.title}. ${s.distance_km} km, ${gainStr}. Difficulty: ${difficultyLabel[s.difficulty]}.`}
+  description={s.seo_description ?? `Stage guide: ${s.title}. ${s.distance_km} km, ${gainStr}. Difficulty: ${s.difficulty}.`}
   breadcrumb="French Way"
   breadcrumbUrl={`/${s.route}`}
   activeRoute={s.route}
@@ -85,9 +98,9 @@ const nextStage = s.next_stage_slug
       <!-- Stats — desktop (right-aligned column) -->
       <div class="page-header__stats hide-on-mobile">
         <div class="page-header__stats-row">
-          <span class={`diff-badge diff-badge--${s.difficulty} diff-badge--lg`}>
+          <span class={`diff-badge diff-badge--${diffClass} diff-badge--lg`}>
             <span class="diff-badge__dot"></span>
-            {difficultyLabel[s.difficulty]}
+            {s.difficulty}
           </span>
           <span class="page-header__divider-desk"></span>
           <div style="text-align: right;">
@@ -100,9 +113,9 @@ const nextStage = s.next_stage_slug
 
     <!-- Stats — mobile (inline row) -->
     <div class="page-header__stats hide-on-desktop">
-      <span class={`diff-badge diff-badge--${s.difficulty}`}>
+      <span class={`diff-badge diff-badge--${diffClass}`}>
         <span class="diff-badge__dot"></span>
-        {difficultyLabel[s.difficulty]}
+        {s.difficulty}
       </span>
       <span class="page-header__divider"></span>
       <span class="page-header__dist">{s.distance_km} km</span>
@@ -164,9 +177,9 @@ const nextStage = s.next_stage_slug
       <div class="sidebar__row">
         <span class="sidebar__label">Difficulty</span>
         <span class="sidebar__value">
-          <span class={`diff-badge diff-badge--${s.difficulty}`}>
+          <span class={`diff-badge diff-badge--${diffClass}`}>
             <span class="diff-badge__dot"></span>
-            {difficultyLabel[s.difficulty]}
+            {s.difficulty}
           </span>
         </span>
       </div>
@@ -205,9 +218,9 @@ const nextStage = s.next_stage_slug
             <div class="data-panel__row">
               <span class="data-panel__key">Difficulty</span>
               <span class="data-panel__val">
-                <span class={`diff-badge diff-badge--${s.difficulty}`}>
+                <span class={`diff-badge diff-badge--${diffClass}`}>
                   <span class="diff-badge__dot"></span>
-                  {difficultyLabel[s.difficulty]}
+                  {s.difficulty}
                 </span>
               </span>
             </div>

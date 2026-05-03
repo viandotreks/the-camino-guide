@@ -329,7 +329,7 @@ async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
       avg_slope_pct:      avgUp   ? String(avgUp)   : undefined,
       max_slope_pct_down: maxDown ? String(maxDown) : undefined,
       avg_slope_pct_down: avgDown ? String(avgDown) : undefined,
-      difficulty:         mapDifficulty(select(page, 'Difficulty')),
+      difficulty:         select(page, 'Difficulty'),
       estimated_time_h:   text(page, 'Estimated time') || undefined,
       start_locality:     text(page, 'Start locality') || undefined,
       end_locality:       text(page, 'End locality') || undefined,
