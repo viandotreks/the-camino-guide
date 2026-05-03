@@ -139,51 +139,5 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     font-size: 0.95rem;
   }
 
-  .search-page__results {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .search-page__result {
-    display: block;
-    padding: 0.85rem 1.1rem;
-    border: 1px solid rgba(0,0,0,0.1);
-    border-radius: 8px;
-    text-decoration: none !important;
-    color: inherit;
-    background: #fff;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-  .search-page__result:hover {
-    border-color: var(--color-green, #2d6a4f);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  }
-
-  .search-page__result-inner {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-  }
-
-  .search-page__badge {
-    display: inline-block;
-    flex-shrink: 0;
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--color-green, #2d6a4f);
-    background: rgba(45,106,79,0.08);
-    padding: 2px 7px;
-    border-radius: 4px;
-  }
-
-  .search-page__result-title {
-    font-weight: 500;
-    font-size: 0.95rem;
-    color: #1a1a1a;
-    word-break: break-word;
-    text-decoration: none;
-  }
+  /* Result styles live in global.css (injected via JS, scoping won't apply) */
 </style>
