@@ -50,6 +50,45 @@ const dataRows = [
 
 const panelPreview = `${s.distance_km} km · ${gainStr}`;
 
+// ── Services ──────────────────────────────────────────────────────────────────
+
+type SvcItem = NonNullable<typeof s.services>[number];
+
+function typeIconSvg(type: string): string {
+  if (type === 'Accommodation')
+    return `<svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true" style="display:inline;vertical-align:-1px"><rect x=".75" y="5.5" width="14.5" height="5.25" rx=".5" stroke="currentColor" stroke-width="1.25"/><rect x="2" y="2" width="4.5" height="3.5" rx=".5" stroke="currentColor" stroke-width="1.25"/><rect x="9.5" y="2" width="4.5" height="3.5" rx=".5" stroke="currentColor" stroke-width="1.25"/></svg>`;
+  if (type === 'Restaurant' || type === 'Cafe' || type === 'Bar')
+    return `<svg width="13" height="15" viewBox="0 0 13 15" fill="none" aria-hidden="true" style="display:inline;vertical-align:-1px"><path d="M3 1v4c0 1.1.9 2 2 2v7" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><path d="M1 1v3M3 1v3M5 1v3" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><path d="M10 1c1.657 0 2.5 1 2.5 2.5S11.657 6 10 6v8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg>`;
+  if (type === 'ATM')
+    return `<svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true" style="display:inline;vertical-align:-1px"><rect x=".75" y=".75" width="12.5" height="9.5" rx="1" stroke="currentColor" stroke-width="1.25"/><text x="2" y="8" font-size="5.5" font-family="sans-serif" font-weight="600" fill="currentColor">ATM</text></svg>`;
+  if (type === 'Pharmacy')
+    return `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true" style="display:inline;vertical-align:-1px"><rect x=".75" y=".75" width="11.5" height="11.5" rx="1" stroke="currentColor" stroke-width="1.25"/><path d="M6.5 3v7M3 6.5h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+  return '';
+}
+
+function siteLabel(url: string): string {
+  try { return new URL(url).hostname.replace(/^www\./, ''); }
+  catch { return url; }
+}
+
+// Group services by km_marker, sorted ascending (no km → end)
+const serviceGroups: Array<{ km: number | null; items: SvcItem[] }> = [];
+if (s.services?.length) {
+  const map = new Map<string, SvcItem[]>();
+  for (const svc of s.services) {
+    const key = svc.km_marker != null ? String(svc.km_marker) : '__none__';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(svc);
+  }
+  for (const [key, items] of [...map.entries()].sort(([a], [b]) => {
+    if (a === '__none__') return 1;
+    if (b === '__none__') return -1;
+    return Number(a) - Number(b);
+  })) {
+    serviceGroups.push({ km: key === '__none__' ? null : Number(key), items });
+  }
+}
+
 // Fetch prev/next stage titles for seq-nav
 const allStages = await getCollection('stages');
 const prevStage = s.prev_stage_slug
@@ -241,11 +280,52 @@ const nextStage = s.next_stage_slug
 
       <!-- Tab panel: Services -->
       <div id="tab-services" class="tab-panel" data-tab="services" role="tabpanel" hidden>
-        <div class="coming-soon">
-          <div class="coming-soon__heading">Accommodation &amp; Services</div>
-          <p>Lodging data for this stage is being added. Check back soon.</p>
-          <div class="coming-soon__caption">In preparation — 2026</div>
-        </div>
+        {serviceGroups.length > 0 ? (
+          <div class="svc-list">
+            {serviceGroups.map(group => (
+              <div class="svc-group">
+                {group.km != null && (
+                  <div class="svc-group__km">
+                    <span class="km-marker">{group.km}</span>
+                  </div>
+                )}
+                <ul class="svc-cards">
+                  {group.items.map(svc => (
+                    <li class="svc-card">
+                      <p class="svc-card__body">
+                        <span class="svc-card__icons" set:html={svc.type.map(typeIconSvg).join('')} />
+                        {' '}<strong class="svc-card__name">{svc.name}</strong>
+                        {svc.address  && <span class="svc-card__addr">{'. '}{svc.address}</span>}
+                        {svc.description && <span class="svc-card__desc">{'. '}{svc.description}</span>}
+                        {(svc.phone || svc.booking_url || svc.website) && (
+                          <span class="svc-card__links">
+                            {svc.phone && (
+                              <a href={`tel:${svc.phone}`} class="svc-card__phone">{' '}{svc.phone}</a>
+                            )}
+                            {svc.phone && (svc.booking_url || svc.website) && (
+                              <span class="svc-card__sep">{' | '}</span>
+                            )}
+                            {svc.booking_url ? (
+                              <a href={svc.booking_url} class="svc-card__book" target="_blank" rel="noopener noreferrer">Book now</a>
+                            ) : svc.website ? (
+                              <a href={svc.website} class="svc-card__site" target="_blank" rel="noopener noreferrer">{siteLabel(svc.website)}</a>
+                            ) : null}
+                          </span>
+                        )}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div class="coming-soon">
+            <div class="coming-soon__heading">Accommodation &amp; Services</div>
+            <p>Lodging data for this stage is being added. Check back soon.</p>
+            <div class="coming-soon__caption">In preparation — 2026</div>
+          </div>
+        )}
       </div>
 
       <!-- Tab panel: Culture & POIs -->
@@ -313,4 +393,104 @@ const nextStage = s.next_stage_slug
     .hide-on-desktop { display: none; }
     .hide-on-mobile  { display: block; }
   }
+
+  /* ── Services list ───────────────────────────────────────────── */
+  .svc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .svc-group {
+    margin-bottom: 28px;
+  }
+
+  .svc-group__km {
+    margin-bottom: 12px;
+  }
+
+  .svc-cards {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .svc-card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+  }
+
+  .svc-card__body {
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .svc-card__icons {
+    display: inline;
+    color: var(--ink-3);
+    margin-right: 4px;
+    gap: 3px;
+  }
+
+  .svc-card__name {
+    font-weight: 700;
+  }
+
+  .svc-card__addr {
+    color: var(--ink-2);
+  }
+
+  .svc-card__desc {
+    color: var(--ink);
+  }
+
+  .svc-card__links {
+    display: inline;
+    white-space: nowrap;
+  }
+
+  .svc-card__phone {
+    color: var(--accent);
+    text-decoration: none;
+    font-family: var(--sans);
+    font-size: 15px;
+  }
+  .svc-card__phone:hover { text-decoration: underline; }
+
+  .svc-card__sep {
+    color: var(--rule);
+    margin: 0 2px;
+  }
+
+  .svc-card__book {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--paper);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 2px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    vertical-align: baseline;
+  }
+  .svc-card__book:hover { background: var(--accent-ink); }
+
+  .svc-card__site {
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 15px;
+    text-decoration: none;
+  }
+  .svc-card__site:hover { text-decoration: underline; }
 </style>
