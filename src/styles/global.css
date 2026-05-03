@@ -748,7 +748,7 @@ details.data-panel:not([open]) .data-panel__icon::after { content: "+"; }
 /* ─── Prose (step by step) ───────────────────────────────────────── */
 .prose {
   font-family: var(--serif);
-  font-size: 16.5px;
+  font-size: 18px;
   line-height: 1.6;
   color: var(--ink);
 }
