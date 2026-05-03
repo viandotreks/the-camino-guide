@@ -32,7 +32,10 @@ function gradeValue(up?: string | null, down?: string | null): string | null {
 }
 
 // Sidebar / panel rows
-const distStr = s.distance_mi ? `${s.distance_km} km · ${s.distance_mi} mi` : `${s.distance_km} km`;
+const fmtNum = (n: number) => Number(n.toFixed(1));
+const distStr = s.distance_mi
+  ? `${fmtNum(s.distance_km)} km · ${fmtNum(s.distance_mi)} mi`
+  : `${fmtNum(s.distance_km)} km`;
 const maxGradeStr = gradeValue(s.max_slope_pct, s.max_slope_pct_down);
 const avgGradeStr = gradeValue(s.avg_slope_pct, s.avg_slope_pct_down);
 
