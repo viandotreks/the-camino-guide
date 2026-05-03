@@ -124,6 +124,12 @@ function relationIds(page: any, name: string): string[] {
 
 function mapDifficulty(value: string): string {
   const map: Record<string, string> = {
+    '●●●●● (hardest)': 'very-hard',
+    '●●●●○ (hard)':    'hard',
+    '●●●○○ (medium)':  'moderate',
+    '●●○○○ (easy)':    'easy',
+    '●○○○○ (easiest)': 'easiest',
+    // legacy values — kept for routes database which hasn't changed yet
     Moderate:  'moderate',
     Demanding: 'hard',
     Strenuous: 'very-hard',
@@ -182,7 +188,8 @@ n2m.setCustomTransformer('image', async (block: any) => {
 async function toMarkdown(pageId: string): Promise<string> {
   const blocks = await n2m.pageToMarkdown(pageId);
   const { parent } = n2m.toMarkdownString(blocks);
-  return parent;
+  // Inline code in this content always represents km markers
+  return parent.replace(/`([^`\n]+)`/g, '<span class="km-marker">$1</span>');
 }
 
 // ─── FRONTMATTER ─────────────────────────────────────────────────────────────
@@ -249,9 +256,37 @@ async function buildRoutes(): Promise<Map<string, string>> {
 
 // ─── STAGES ──────────────────────────────────────────────────────────────────
 
+function orderStages(pages: any[]): any[] {
+  const mains = pages
+    .filter(p => select(p, 'Track type') !== 'Alternative')
+    .sort((a, b) => num(a, 'Stage number') - num(b, 'Stage number'));
+
+  const alternatives = pages
+    .filter(p => select(p, 'Track type') === 'Alternative')
+    .sort((a, b) => num(a, 'Stage number') - num(b, 'Stage number'));
+
+  // Build a map from parent stage number → alternative pages
+  const altsByParent = new Map<number, any[]>();
+  for (const alt of alternatives) {
+    const parent = num(alt, 'Branch from');
+    if (!altsByParent.has(parent)) altsByParent.set(parent, []);
+    altsByParent.get(parent)!.push(alt);
+  }
+
+  // Interleave: each main stage is followed by its alternatives
+  const ordered: any[] = [];
+  for (const main of mains) {
+    ordered.push(main);
+    const children = altsByParent.get(num(main, 'Stage number')) ?? [];
+    ordered.push(...children);
+  }
+
+  return ordered;
+}
+
 async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
   const pages  = await queryAll(NOTION_STAGES_DB!);
-  const sorted = [...pages].sort((a, b) => num(a, 'Stage number') - num(b, 'Stage number'));
+  const sorted = orderStages(pages);
   const slugs  = sorted.map(p => text(p, 'Slug'));
   clearDir(OUT.stages);
 
@@ -266,41 +301,54 @@ async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
     const coverImage = await getCoverImage(page);
     const body       = await toMarkdown(page.id);
 
-    // Split Watch out text into array items (one per non-empty line)
     const watchOutText  = text(page, 'Watch out');
     const watch_out_for = watchOutText
       ? watchOutText.split('\n').map(s => s.trim()).filter(Boolean)
       : [];
 
-    // max/avg grade stored as numbers in Notion, schema expects string (e.g. "12.5")
-    const maxGrade = num(page, 'Max grade');
-    const avgGrade = num(page, 'Avg grade');
+    // Grade fields: numbers in Notion, strings in schema (appended with % in template)
+    const maxUp   = num(page, 'Max grade');
+    const avgUp   = num(page, 'Avg grade');
+    const maxDown = num(page, 'Max grade -');
+    const avgDown = num(page, 'Avg grade -');
+
+    const trackType  = select(page, 'Track type') || undefined;
+    const branchFrom = num(page, 'Branch from') || undefined;
+    const mapUrl     = text(page, 'Map url') || undefined;
+    const distMi     = num(page, 'Distance mi') || undefined;
 
     const frontmatter = fm({
-      title:            text(page, 'Name'),
-      route:            routeSlug,
-      order:            num(page, 'Stage number'),
-      distance_km:      num(page, 'Distance km'),
-      elevation_gain_m: num(page, 'Elevation +'),
-      elevation_loss_m: num(page, 'Elevation -'),
-      max_slope_pct:    maxGrade ? String(maxGrade) : undefined,
-      avg_slope_pct:    avgGrade ? String(avgGrade) : undefined,
-      difficulty:       mapDifficulty(select(page, 'Difficulty')),
-      estimated_time_h: text(page, 'Estimated time') || undefined,
-      start_locality:   text(page, 'Start locality') || undefined,
-      end_locality:     text(page, 'End locality') || undefined,
-      prev_stage_slug:  slugs[i - 1] ?? null,
-      next_stage_slug:  slugs[i + 1] ?? null,
-      in_short:         text(page, 'In short'),
+      title:              text(page, 'Name'),
+      route:              routeSlug,
+      order:              num(page, 'Stage number'),
+      distance_km:        num(page, 'Distance km'),
+      distance_mi:        distMi,
+      elevation_gain_m:   num(page, 'Elevation +'),
+      elevation_loss_m:   num(page, 'Elevation -'),
+      max_slope_pct:      maxUp   ? String(maxUp)   : undefined,
+      avg_slope_pct:      avgUp   ? String(avgUp)   : undefined,
+      max_slope_pct_down: maxDown ? String(maxDown) : undefined,
+      avg_slope_pct_down: avgDown ? String(avgDown) : undefined,
+      difficulty:         mapDifficulty(select(page, 'Difficulty')),
+      estimated_time_h:   text(page, 'Estimated time') || undefined,
+      start_locality:     text(page, 'Start locality') || undefined,
+      end_locality:       text(page, 'End locality') || undefined,
+      track_type:         trackType,
+      branch_from:        branchFrom,
+      map_url:            mapUrl,
+      prev_stage_slug:    slugs[i - 1] ?? null,
+      next_stage_slug:    slugs[i + 1] ?? null,
+      in_short:           text(page, 'In short'),
       watch_out_for,
-      for_bikers:       text(page, 'For bikers') || undefined,
-      seo_description:  text(page, 'SEO description') || undefined,
-      coverImage:       coverImage ?? undefined,
-      published:        true,
+      for_bikers:         text(page, 'For bikers') || undefined,
+      seo_description:    text(page, 'SEO description') || undefined,
+      coverImage:         coverImage ?? undefined,
+      published:          true,
     });
 
     fs.writeFileSync(path.join(OUT.stages, `${slug}.md`), `${frontmatter}\n\n${body}`);
-    console.log(`  stage ${num(page, 'Stage number')}: ${slug}`);
+    const trackLabel = trackType === 'Alternative' ? ` [alt, branch from ${branchFrom}]` : '';
+    console.log(`  stage ${num(page, 'Stage number')}: ${slug}${trackLabel}`);
   }
 }
 

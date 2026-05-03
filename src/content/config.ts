@@ -31,10 +31,13 @@ const stages = defineCollection({
 
     // Technical data (sidebar)
     distance_km: z.number(),
+    distance_mi: z.number().optional(),
     elevation_gain_m: z.number().int(),
     elevation_loss_m: z.number().int(),
     max_slope_pct: z.string().optional(),
     avg_slope_pct: z.string().optional(),
+    max_slope_pct_down: z.string().optional(),
+    avg_slope_pct_down: z.string().optional(),
     difficulty: z.string(),
     estimated_time_h: z.string(),             // "6–8 hours"
 
@@ -55,6 +58,13 @@ const stages = defineCollection({
     watch_out_for: z.array(z.string()),       // bullet items, each a sentence
     for_bikers: z.string().optional(),        // paragraph or two
     // culture_pois lives in body content or separate field — premium later
+
+    // Track type (Main vs Alternative route)
+    track_type: z.enum(['Main', 'Alternative']).optional(),
+    branch_from: z.number().optional(),       // stage number of parent, for alternatives
+
+    // Map
+    map_url: z.string().url().optional(),
 
     // Meta
     coverImage: z.string().url().optional(),
