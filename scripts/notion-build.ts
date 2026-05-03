@@ -209,10 +209,16 @@ const dataSourceIdCache = new Map<string, string>();
 
 async function getDataSourceId(databaseId: string): Promise<string> {
   if (dataSourceIdCache.has(databaseId)) return dataSourceIdCache.get(databaseId)!;
-  const db = await notion.databases.retrieve({ database_id: databaseId }) as any;
-  const dsId: string = db.data_sources?.[0]?.id ?? databaseId;
-  dataSourceIdCache.set(databaseId, dsId);
-  return dsId;
+  try {
+    const db = await notion.databases.retrieve({ database_id: databaseId }) as any;
+    const dsId: string = db.data_sources?.[0]?.id ?? databaseId;
+    dataSourceIdCache.set(databaseId, dsId);
+    return dsId;
+  } catch {
+    // databases.retrieve failed — assume the provided ID is already a data source ID
+    dataSourceIdCache.set(databaseId, databaseId);
+    return databaseId;
+  }
 }
 
 async function queryAll(databaseId: string): Promise<any[]> {
