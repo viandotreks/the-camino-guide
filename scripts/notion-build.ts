@@ -17,6 +17,7 @@ const {
   NOTION_ROUTES_DB,
   NOTION_STAGES_DB,
   NOTION_LOCALITIES_DB,
+  NOTION_SERVICES_DB,
   R2_ACCOUNT_ID,
   R2_ACCESS_KEY_ID,
   R2_SECRET_ACCESS_KEY,
@@ -26,6 +27,7 @@ const {
 
 const missing = [
   'NOTION_API_KEY', 'NOTION_ROUTES_DB', 'NOTION_STAGES_DB', 'NOTION_LOCALITIES_DB',
+  'NOTION_SERVICES_DB',
   'R2_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET_NAME', 'R2_PUBLIC_URL',
 ].filter(k => !process.env[k]);
 
@@ -310,6 +312,61 @@ async function buildRoutes(): Promise<Map<string, string>> {
   return idToSlug;
 }
 
+// ─── SERVICES ────────────────────────────────────────────────────────────────
+
+interface ServiceItem {
+  name:        string;
+  type:        string[];
+  km_marker?:  number;
+  description?: string;
+  address?:    string;
+  phone?:      string;
+  website?:    string;
+  booking_url?: string;
+}
+
+async function fetchServices(stageIdToSlug: Map<string, string>): Promise<Map<string, ServiceItem[]>> {
+  const pages    = await queryAll(NOTION_SERVICES_DB!);
+  const byStage  = new Map<string, ServiceItem[]>();
+
+  for (const page of pages) {
+    const stageIds = relationIds(page, 'Stage');
+    if (!stageIds.length) continue;
+    const stageSlug = stageIdToSlug.get(stageIds[0]);
+    if (!stageSlug) continue;
+
+    // Preserve null km_marker for sort (num() returns 0 for null, which is wrong here)
+    const kmRaw = page.properties['Km marker']?.number ?? null;
+
+    const service: ServiceItem = {
+      name:        text(page, 'Name'),
+      type:        multiSelect(page, 'Type'),
+      km_marker:   kmRaw !== null ? kmRaw : undefined,
+      description: text(page, 'Description') || undefined,
+      address:     text(page, 'Address')     || undefined,
+      phone:       text(page, 'Phone')       || undefined,
+      website:     page.properties['Website']?.url     || undefined,
+      booking_url: page.properties['Booking URL']?.url || undefined,
+    };
+
+    if (!byStage.has(stageSlug)) byStage.set(stageSlug, []);
+    byStage.get(stageSlug)!.push(service);
+  }
+
+  // Sort within each stage: by km_marker asc, missing km_marker goes to end
+  for (const [slug, services] of byStage) {
+    byStage.set(slug, services.sort((a, b) => {
+      if (a.km_marker == null && b.km_marker == null) return 0;
+      if (a.km_marker == null) return 1;
+      if (b.km_marker == null) return -1;
+      return a.km_marker - b.km_marker;
+    }));
+    console.log(`  services for ${slug}: ${services.length}`);
+  }
+
+  return byStage;
+}
+
 // ─── STAGES ──────────────────────────────────────────────────────────────────
 
 function orderStages(pages: any[]): any[] {
@@ -341,7 +398,17 @@ function orderStages(pages: any[]): any[] {
 }
 
 async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
-  const pages  = await queryAll(NOTION_STAGES_DB!);
+  const pages = await queryAll(NOTION_STAGES_DB!);
+
+  // Build page-id → slug map before fetching services (services need to resolve stage slugs)
+  const stageIdToSlug = new Map<string, string>();
+  for (const page of pages) {
+    const slug = text(page, 'Slug');
+    if (slug) stageIdToSlug.set(page.id, slug);
+  }
+
+  const servicesByStage = await fetchServices(stageIdToSlug);
+
   const sorted = orderStages(pages);
   const slugs  = sorted.map(p => text(p, 'Slug'));
   clearDir(OUT.stages);
@@ -395,6 +462,7 @@ async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
       in_short:           html(page, 'In short', true),
       watch_out_for,
       for_bikers:         html(page, 'For bikers', true) || undefined,
+      services:           servicesByStage.get(slug) ?? undefined,
       seo_description:    text(page, 'SEO description') || undefined,
       coverImage:         coverImage ?? undefined,
       published:          true,
