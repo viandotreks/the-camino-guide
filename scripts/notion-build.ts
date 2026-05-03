@@ -189,7 +189,7 @@ async function toMarkdown(pageId: string): Promise<string> {
   const blocks = await n2m.pageToMarkdown(pageId);
   const { parent } = n2m.toMarkdownString(blocks);
   // Inline code in this content always represents km markers
-  return parent.replace(/`([^`\n]+)`/g, '<span class="km-marker">$1</span>');
+  return (parent ?? '').replace(/`([^`\n]+)`/g, '<span class="km-marker">$1</span>');
 }
 
 // ─── FRONTMATTER ─────────────────────────────────────────────────────────────
