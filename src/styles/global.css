@@ -1147,4 +1147,5 @@ details.data-panel:not([open]) .data-panel__icon::after { content: "+"; }
   border-radius: 4px;
   margin-left: 2px;
   margin-right: 2px;
+  white-space: nowrap;
 }
