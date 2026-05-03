@@ -35,8 +35,10 @@ const services = [
   pageType="locality"
 >
 
+  <span data-pagefind-meta="type:Locality" hidden></span>
+
   <!-- Page header -->
-  <header class="locality-header">
+  <header class="locality-header" data-pagefind-ignore>
     <div class="page-header__eyebrow" style="margin-bottom: 8px;">
       <a href={`/${l.route}`} class="cg-eyebrow" style="color: var(--accent-ink); text-decoration: none;">
         {l.route === 'french-way' ? 'French Way' : l.route}
@@ -71,7 +73,7 @@ const services = [
   </header>
 
   <!-- Map -->
-  <div class="map-area">
+  <div class="map-area" data-pagefind-ignore>
     {l.map_embed ? (
       <Fragment set:html={l.map_embed} />
     ) : (
@@ -80,7 +82,7 @@ const services = [
   </div>
 
   <!-- Tab bar -->
-  <div class="tab-bar tab-bar--2" role="tablist" id="locality-tabs">
+  <div class="tab-bar tab-bar--2" role="tablist" id="locality-tabs" data-pagefind-ignore>
     <button
       class="tab-bar__btn"
       role="tab"
@@ -115,7 +117,7 @@ const services = [
     </div>
 
     <!-- Tab panel: Lodging & Services -->
-    <div id="tab-lodging" class="tab-panel" data-tab="lodging" role="tabpanel" hidden>
+    <div id="tab-lodging" class="tab-panel" data-tab="lodging" role="tabpanel" hidden data-pagefind-ignore>
 
       {services.length > 0 ? (
         <>

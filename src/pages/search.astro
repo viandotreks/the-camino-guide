@@ -77,12 +77,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       return;
     }
     results.innerHTML = data
-      .map(r => `
-        <a class="search-page__result" href="${r.url}">
-          <span class="search-page__result-title">${r.meta?.title ?? 'Page'}</span>
-          <span class="search-page__result-excerpt">${r.excerpt}</span>
-        </a>
-      `)
+      .map(r => {
+        const type  = r.meta?.type ?? '';
+        const title = (r.meta?.title ?? 'Page').replace(/ — The Camino Guide$/, '');
+        const badge = type ? `<span class="search-page__badge">${type}</span>` : '';
+        return `
+          <a class="search-page__result" href="${r.url}">
+            ${badge}
+            <span class="search-page__result-title">${title}</span>
+            <span class="search-page__result-excerpt">${r.excerpt}</span>
+          </a>
+        `;
+      })
       .join('');
   }
 </script>
@@ -112,6 +118,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     border-radius: 6px;
     font-size: 1rem;
     outline: none;
+    font-family: inherit;
   }
   .search-page__input:focus { border-color: var(--color-green, #2d6a4f); }
 
@@ -123,6 +130,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     border-radius: 6px;
     font-size: 1rem;
     cursor: pointer;
+    font-family: inherit;
   }
 
   .search-page__status {
@@ -130,37 +138,61 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     font-size: 0.95rem;
   }
 
+  .search-page__results {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
   .search-page__result {
     display: block;
-    padding: 1rem 0;
-    border-bottom: 1px solid rgba(0,0,0,0.08);
-    text-decoration: none;
+    padding: 1rem 1.1rem;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    text-decoration: none !important;
     color: inherit;
+    background: #fff;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
-  .search-page__result:last-child { border-bottom: none; }
-  .search-page__result:hover .search-page__result-title {
+  .search-page__result:hover {
+    border-color: var(--color-green, #2d6a4f);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+
+  .search-page__badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: var(--color-green, #2d6a4f);
+    background: rgba(45,106,79,0.08);
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-bottom: 0.4rem;
   }
 
   .search-page__result-title {
     display: block;
     font-weight: 600;
-    font-size: 0.95rem;
-    margin-bottom: 0.25rem;
-    color: var(--color-text, #1a1a1a);
+    font-size: 1rem;
+    color: #1a1a1a;
+    margin-bottom: 0.3rem;
     word-break: break-word;
+    text-decoration: none;
   }
 
   .search-page__result-excerpt {
     display: block;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     color: rgba(0,0,0,0.55);
     line-height: 1.5;
+    text-decoration: none;
   }
 
   .search-page__result-excerpt mark {
     background: transparent;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--color-green, #2d6a4f);
   }
 </style>

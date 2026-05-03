@@ -112,8 +112,10 @@ const nextStage = s.next_stage_slug
   pageType="stage"
 >
 
+  <span data-pagefind-meta="type:Stage" hidden></span>
+
   <!-- Page header -->
-  <header class="page-header">
+  <header class="page-header" data-pagefind-ignore>
     <div class="page-header__inner">
       <div>
         <div class="page-header__eyebrow">
@@ -169,7 +171,7 @@ const nextStage = s.next_stage_slug
   </header>
 
   <!-- Map -->
-  <div class="map-area">
+  <div class="map-area" data-pagefind-ignore>
     {s.map_embed ? (
       <Fragment set:html={s.map_embed} />
     ) : (
@@ -178,7 +180,7 @@ const nextStage = s.next_stage_slug
   </div>
 
   <!-- Sticky tab bar -->
-  <div class="tab-bar tab-bar--3" role="tablist" id="stage-tabs">
+  <div class="tab-bar tab-bar--3" role="tablist" id="stage-tabs" data-pagefind-ignore>
     <button
       class="tab-bar__btn"
       role="tab"
@@ -210,7 +212,7 @@ const nextStage = s.next_stage_slug
   <div class="stage-grid">
 
     <!-- Sidebar: visible on desktop only -->
-    <aside class="sidebar" aria-label="Stage data">
+    <aside class="sidebar" aria-label="Stage data" data-pagefind-ignore>
       <div class="sidebar__title">Stage data</div>
       {dataRows.map((row, i) => (
         <div class={`sidebar__row${i === dataRows.length - 1 ? ' sidebar__row--last' : ''}`}>
@@ -243,7 +245,7 @@ const nextStage = s.next_stage_slug
       <div id="tab-guide" class="tab-panel" data-tab="guide" role="tabpanel">
 
         <!-- Mobile collapsible data panel -->
-        <details class="data-panel">
+        <details class="data-panel" data-pagefind-ignore>
           <summary>
             <div class="data-panel__label-row">
               <span class="cg-eyebrow">Stage data</span>
@@ -283,7 +285,7 @@ const nextStage = s.next_stage_slug
       </div>
 
       <!-- Tab panel: Services -->
-      <div id="tab-services" class="tab-panel" data-tab="services" role="tabpanel" hidden>
+      <div id="tab-services" class="tab-panel" data-tab="services" role="tabpanel" hidden data-pagefind-ignore>
         {serviceGroups.length > 0 ? (
           <div class="svc-list">
 
@@ -350,7 +352,7 @@ const nextStage = s.next_stage_slug
       </div>
 
       <!-- Tab panel: Culture & POIs -->
-      <div id="tab-culture" class="tab-panel" data-tab="culture" role="tabpanel" hidden>
+      <div id="tab-culture" class="tab-panel" data-tab="culture" role="tabpanel" hidden data-pagefind-ignore>
         <div class="coming-soon">
           <div class="coming-soon__heading">Culture &amp; POIs</div>
           <p>Field notes on the churches, ruins, monasteries and small museums along this stage. In preparation.</p>
@@ -359,7 +361,7 @@ const nextStage = s.next_stage_slug
       </div>
 
       <!-- Sequential navigation -->
-      <nav class="seq-nav" aria-label="Adjacent stages">
+      <nav class="seq-nav" aria-label="Adjacent stages" data-pagefind-ignore>
         {s.prev_stage_slug ? (
           <a href={`/${s.route}/${s.prev_stage_slug}`} class="seq-nav__link">
             <span class="seq-nav__label">← Previous</span>
