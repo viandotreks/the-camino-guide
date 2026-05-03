@@ -83,9 +83,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         const badge = type ? `<span class="search-page__badge">${type}</span>` : '';
         return `
           <a class="search-page__result" href="${r.url}">
-            ${badge}
-            <span class="search-page__result-title">${title}</span>
-            <span class="search-page__result-excerpt">${r.excerpt}</span>
+            <span class="search-page__result-inner">
+              ${badge}
+              <span class="search-page__result-title">${title}</span>
+            </span>
           </a>
         `;
       })
@@ -146,7 +147,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   .search-page__result {
     display: block;
-    padding: 1rem 1.1rem;
+    padding: 0.85rem 1.1rem;
     border: 1px solid rgba(0,0,0,0.1);
     border-radius: 8px;
     text-decoration: none !important;
@@ -159,9 +160,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   }
 
+  .search-page__result-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
   .search-page__badge {
     display: inline-block;
-    font-size: 0.7rem;
+    flex-shrink: 0;
+    font-size: 0.68rem;
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -169,30 +177,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     background: rgba(45,106,79,0.08);
     padding: 2px 7px;
     border-radius: 4px;
-    margin-bottom: 0.4rem;
   }
 
   .search-page__result-title {
-    display: block;
-    font-weight: 600;
-    font-size: 1rem;
+    font-weight: 500;
+    font-size: 0.95rem;
     color: #1a1a1a;
-    margin-bottom: 0.3rem;
     word-break: break-word;
     text-decoration: none;
-  }
-
-  .search-page__result-excerpt {
-    display: block;
-    font-size: 0.85rem;
-    color: rgba(0,0,0,0.55);
-    line-height: 1.5;
-    text-decoration: none;
-  }
-
-  .search-page__result-excerpt mark {
-    background: transparent;
-    font-weight: 700;
-    color: var(--color-green, #2d6a4f);
   }
 </style>

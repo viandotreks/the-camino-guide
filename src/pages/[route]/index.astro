@@ -37,8 +37,10 @@ const difficultyLabel: Record<string, string> = {
   pageType="route"
 >
 
+  <span data-pagefind-meta="type:Route" hidden></span>
+
   <!-- Route header -->
-  <header class="route-header">
+  <header class="route-header" data-pagefind-ignore>
     <div class="page-header__eyebrow" style="margin-bottom: 10px;">
       <span class="cg-eyebrow">Camino de Santiago</span>
     </div>
@@ -58,7 +60,7 @@ const difficultyLabel: Record<string, string> = {
   </div>
 
   <!-- Stage list -->
-  <div class="container" style="padding-bottom: 0;">
+  <div class="container" style="padding-bottom: 0;" data-pagefind-ignore>
     <h2 class="section-eyebrow" style="margin-bottom: 16px;">Stages</h2>
   </div>
 
