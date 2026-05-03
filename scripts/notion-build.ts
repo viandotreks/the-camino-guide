@@ -107,7 +107,11 @@ function text(page: any, name: string): string {
 }
 
 function num(page: any, name: string): number {
-  return page.properties[name]?.number ?? 0;
+  const p = page.properties[name];
+  if (!p) return 0;
+  if (p.type === 'number')  return p.number  ?? 0;
+  if (p.type === 'formula') return p.formula?.number ?? 0;
+  return 0;
 }
 
 function select(page: any, name: string): string {
