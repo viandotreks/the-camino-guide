@@ -1,0 +1,145 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Services"
+  description="Luggage transfers, trip planning, and pilgrim services for the Camino de Santiago — by Viando."
+  activeRoute="services"
+>
+
+  <div class="page-header page-header--simple" data-pagefind-ignore>
+    <div class="container">
+      <h1 class="page-header__h1">Services</h1>
+      <p class="page-header__desc">Practical support for your Camino — from luggage transfers to trip planning.</p>
+    </div>
+  </div>
+
+  <div class="container services-section">
+
+    <div class="service-card">
+      <div class="service-card__icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2"/>
+          <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+          <line x1="12" y1="12" x2="12" y2="16"/>
+          <line x1="10" y1="14" x2="14" y2="14"/>
+        </svg>
+      </div>
+      <div class="service-card__body">
+        <h2 class="service-card__title">Luggage Transfer</h2>
+        <p class="service-card__desc">Walk without your pack. We collect your luggage each morning and deliver it to your next accommodation — anywhere on the French Way, Portuguese Way, or Northern Way.</p>
+        <a href="https://viandotreks.com" class="service-card__cta" target="_blank" rel="noopener">Book a transfer →</a>
+      </div>
+    </div>
+
+    <div class="service-card">
+      <div class="service-card__icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4l3 3"/>
+        </svg>
+      </div>
+      <div class="service-card__body">
+        <h2 class="service-card__title">Trip Planning</h2>
+        <p class="service-card__desc">Not sure how to structure your Camino? We help you choose the right stages, book accommodation, and build a realistic itinerary — whether you have 7 days or 35.</p>
+        <a href="https://viandotreks.com" class="service-card__cta" target="_blank" rel="noopener">Get in touch →</a>
+      </div>
+    </div>
+
+    <div class="service-card">
+      <div class="service-card__icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <div class="service-card__body">
+        <h2 class="service-card__title">Accommodation</h2>
+        <p class="service-card__desc">Pre-booked private rooms along your route. We work with trusted albergues and small hotels — no queuing at the door, no sleeping on the floor.</p>
+        <a href="https://viandotreks.com" class="service-card__cta" target="_blank" rel="noopener">See options →</a>
+      </div>
+    </div>
+
+  </div>
+
+</BaseLayout>
+
+<style>
+  .page-header--simple {
+    padding: 48px 0 40px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .page-header__h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    margin-bottom: 8px;
+  }
+
+  .page-header__desc {
+    font-family: var(--sans);
+    font-size: 15px;
+    color: var(--ink-3);
+    max-width: 520px;
+    line-height: 1.6;
+  }
+
+  .services-section {
+    padding-top: 48px;
+    padding-bottom: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 40px;
+    margin-bottom: 40px;
+  }
+
+  .service-card {
+    display: flex;
+    gap: 1.5rem;
+    padding: 28px 24px;
+    background: var(--paper);
+    align-items: flex-start;
+  }
+
+  @media (max-width: 480px) {
+    .service-card { flex-direction: column; gap: 1rem; }
+  }
+
+  .service-card__icon {
+    flex-shrink: 0;
+    color: #e77067;
+    margin-top: 2px;
+  }
+
+  .service-card__title {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .service-card__desc {
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--ink-2);
+    line-height: 1.6;
+    margin-bottom: 12px;
+    max-width: 520px;
+  }
+
+  .service-card__cta {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    color: #e77067;
+    text-decoration: none;
+    border-bottom: 1.5px solid #e77067;
+    padding-bottom: 1px;
+  }
+  .service-card__cta:hover { opacity: 0.8; }
+</style>

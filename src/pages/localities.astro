@@ -1,0 +1,193 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const allLocalities = await getCollection('localities', ({ data }) => data.published);
+
+// Group by route, sorted by km_to_santiago descending (start → Santiago)
+const byRoute = allLocalities.reduce<Record<string, typeof allLocalities>>((acc, loc) => {
+  const r = loc.data.route;
+  if (!acc[r]) acc[r] = [];
+  acc[r].push(loc);
+  return acc;
+}, {});
+
+const routeOrder = ['french-way', 'portuguese-way', 'northern-way', 'le-puy'];
+const routeLabels: Record<string, string> = {
+  'french-way':    'French Way',
+  'portuguese-way':'Portuguese Way',
+  'northern-way':  'Northern Way',
+  'le-puy':        'Le Puy Route',
+};
+
+const sortedRoutes = Object.keys(byRoute).sort(
+  (a, b) => routeOrder.indexOf(a) - routeOrder.indexOf(b)
+);
+
+for (const r of sortedRoutes) {
+  byRoute[r].sort((a, b) => b.data.km_to_santiago - a.data.km_to_santiago);
+}
+
+const serviceIcons: { key: keyof typeof allLocalities[number]['data']; label: string }[] = [
+  { key: 'has_albergue',    label: 'Albergue' },
+  { key: 'has_hotel',       label: 'Hotel' },
+  { key: 'has_atm',         label: 'ATM' },
+  { key: 'has_pharmacy',    label: 'Pharmacy' },
+  { key: 'has_supermarket', label: 'Supermarket' },
+];
+---
+
+<BaseLayout
+  title="Localities"
+  description="Towns and villages on the Camino de Santiago — services, distances to Santiago, and local guides."
+  activeRoute=""
+>
+
+  <div class="page-header page-header--simple" data-pagefind-ignore>
+    <div class="container">
+      <h1 class="page-header__h1">Localities</h1>
+      <p class="page-header__desc">Towns and villages along each route, with services and distances to Santiago.</p>
+    </div>
+  </div>
+
+  <div class="container listing-section">
+    {allLocalities.length === 0 ? (
+      <p class="listing-empty">No localities published yet.</p>
+    ) : (
+      sortedRoutes.map(routeSlug => (
+        <section class="route-group">
+          <h2 class="route-group__title">
+            <a href={`/${routeSlug}`}>{routeLabels[routeSlug] ?? routeSlug}</a>
+          </h2>
+          <div class="locality-list">
+            {byRoute[routeSlug].map(loc => {
+              const l = loc.data;
+              const services = serviceIcons.filter(s => l[s.key]);
+              return (
+                <a href={`/${l.route}/${loc.slug}`} class="locality-row">
+                  <span class="locality-row__name">
+                    {l.name}
+                    {l.name_alt && <span class="locality-row__alt"> / {l.name_alt}</span>}
+                  </span>
+                  <span class="locality-row__km">{l.km_to_santiago.toLocaleString('en-US')} km</span>
+                  {services.length > 0 && (
+                    <span class="locality-row__services">
+                      {services.map(s => <span class="locality-row__tag">{s.label}</span>)}
+                    </span>
+                  )}
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      ))
+    )}
+  </div>
+
+</BaseLayout>
+
+<style>
+  .page-header--simple {
+    padding: 48px 0 40px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .page-header__h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    margin-bottom: 8px;
+  }
+
+  .page-header__desc {
+    font-family: var(--sans);
+    font-size: 15px;
+    color: var(--ink-3);
+    max-width: 520px;
+    line-height: 1.6;
+  }
+
+  .listing-section {
+    padding-top: 40px;
+    padding-bottom: 64px;
+  }
+
+  .listing-empty {
+    font-family: var(--sans);
+    color: var(--ink-3);
+  }
+
+  .route-group {
+    margin-bottom: 48px;
+  }
+
+  .route-group__title {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 12px;
+  }
+
+  .route-group__title a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .route-group__title a:hover { color: var(--accent-ink); }
+
+  .locality-list {
+    border-top: 1px solid var(--rule);
+  }
+
+  .locality-row {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+    text-decoration: none;
+    color: inherit;
+    flex-wrap: wrap;
+  }
+  .locality-row:hover .locality-row__name { color: var(--accent-ink); }
+
+  .locality-row__name {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 500;
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .locality-row__alt {
+    font-weight: 400;
+    color: var(--ink-3);
+    font-size: 14px;
+  }
+
+  .locality-row__km {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--ink-3);
+    white-space: nowrap;
+  }
+
+  .locality-row__services {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .locality-row__tag {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+</style>
