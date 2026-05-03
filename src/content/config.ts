@@ -76,8 +76,8 @@ const stages = defineCollection({
       description: z.string().optional(),
       address:     z.string().optional(),
       phone:       z.string().optional(),
-      website:     z.string().url().optional(),
-      booking_url: z.string().url().optional(),
+      website:     z.string().optional(),
+      booking_url: z.string().optional(),
     })).optional(),
 
     // Meta

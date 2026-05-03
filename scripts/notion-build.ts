@@ -162,6 +162,11 @@ function richTextToLines(richText: any[]): string[] {
   return lines.filter(l => l.trim());
 }
 
+function normalizeUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
 function num(page: any, name: string): number {
   const p = page.properties[name];
   if (!p) return 0;
@@ -355,8 +360,8 @@ async function fetchServices(stageIdToSlug: Map<string, string>): Promise<Map<st
       description: text(page, 'Description') || undefined,
       address:     text(page, 'Address')     || undefined,
       phone:       text(page, 'Phone')       || undefined,
-      website:     page.properties['Website']?.url     || undefined,
-      booking_url: page.properties['Booking URL']?.url || undefined,
+      website:     normalizeUrl(page.properties['Website']?.url),
+      booking_url: normalizeUrl(page.properties['Booking URL']?.url),
     };
 
     if (!byStage.has(stageSlug)) byStage.set(stageSlug, []);
