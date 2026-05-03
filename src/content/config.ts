@@ -57,6 +57,7 @@ const stages = defineCollection({
     in_short: z.string(),                     // 2–3 sentences
     watch_out_for: z.array(z.string()),       // bullet items, each a sentence
     for_bikers: z.string().optional(),        // paragraph or two
+    services_intro: z.string().optional(),    // intro paragraph for the Services tab
     // culture_pois lives in body content or separate field — premium later
 
     // Track type (Main vs Alternative route)

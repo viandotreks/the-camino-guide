@@ -286,6 +286,23 @@ const nextStage = s.next_stage_slug
       <div id="tab-services" class="tab-panel" data-tab="services" role="tabpanel" hidden>
         {serviceGroups.length > 0 ? (
           <div class="svc-list">
+
+            <!-- Icon key -->
+            <details class="svc-icon-key">
+              <summary class="svc-icon-key__toggle">Icon key</summary>
+              <ul class="svc-icon-key__list">
+                <li><span set:html={typeIconSvg('Accommodation')} /> Accommodation (shared or private)</li>
+                <li><span set:html={typeIconSvg('Restaurant')} /> Restaurant and eating houses with daily menu / different options</li>
+                <li><span set:html={typeIconSvg('Cafe')} /> Cafes and taverns with limited meal options</li>
+                <li><span set:html={typeIconSvg('Pilgrim Reception')} /> Pilgrims reception, help point</li>
+                <li><span set:html={typeIconSvg('Shop')} /> Shop / Store</li>
+              </ul>
+            </details>
+
+            <!-- Stage-specific intro -->
+            {s.services_intro && (
+              <div class="svc-intro prose" set:html={s.services_intro} />
+            )}
             {serviceGroups.map(group => (
               <div class="svc-group">
                 {group.km != null && (
@@ -396,6 +413,60 @@ const nextStage = s.next_stage_slug
   @media (min-width: 900px) {
     .hide-on-desktop { display: none; }
     .hide-on-mobile  { display: block; }
+  }
+
+  /* ── Icon key ───────────────────────────────────────────────── */
+  .svc-icon-key {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+
+  .svc-icon-key__toggle {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ink-2);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+  }
+  .svc-icon-key__toggle::-webkit-details-marker { display: none; }
+  .svc-icon-key__toggle::before {
+    content: '∧';
+    font-size: 11px;
+    transition: transform 0.15s;
+  }
+  details:not([open]) .svc-icon-key__toggle::before {
+    transform: rotate(180deg);
+  }
+
+  .svc-icon-key__list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .svc-icon-key__list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink-2);
+  }
+
+  /* ── Services intro ──────────────────────────────────────────── */
+  .svc-intro {
+    margin-bottom: 24px;
+    font-size: 16px;
+    color: var(--ink);
   }
 
   /* ── Services list ───────────────────────────────────────────── */

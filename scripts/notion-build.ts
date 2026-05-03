@@ -472,6 +472,7 @@ async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
       in_short:           html(page, 'In short', true),
       watch_out_for,
       for_bikers:         html(page, 'For bikers', true) || undefined,
+      services_intro:     html(page, 'Services intro', true) || undefined,
       services:           servicesByStage.get(slug) ?? undefined,
       seo_description:    text(page, 'SEO description') || undefined,
       coverImage:         coverImage ?? undefined,
