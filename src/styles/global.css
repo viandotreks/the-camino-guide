@@ -1145,7 +1145,9 @@ details.data-panel:not([open]) .data-panel__icon::after { content: "+"; }
 .km-marker {
   background: #000;
   color: oklch(97.2% .008 80);
-  padding: 2px;
+  font-family: var(--mono);
+  font-size: 0.85em;
+  padding: 2px 5px;
   border-radius: 4px;
   margin-left: 2px;
   margin-right: 2px;
