@@ -326,6 +326,7 @@ interface ServiceItem {
   name:        string;
   type:        string[];
   km_marker?:  number;
+  location?:   string;
   description?: string;
   address?:    string;
   phone?:      string;
@@ -350,6 +351,7 @@ async function fetchServices(stageIdToSlug: Map<string, string>): Promise<Map<st
       name:        text(page, 'Name'),
       type:        multiSelect(page, 'Type'),
       km_marker:   kmRaw !== null ? kmRaw : undefined,
+      location:    text(page, 'Location') || undefined,
       description: text(page, 'Description') || undefined,
       address:     text(page, 'Address')     || undefined,
       phone:       text(page, 'Phone')       || undefined,

@@ -71,6 +71,7 @@ const stages = defineCollection({
       name:        z.string(),
       type:        z.array(z.string()),
       km_marker:   z.number().optional(),
+      location:    z.string().optional(),
       description: z.string().optional(),
       address:     z.string().optional(),
       phone:       z.string().optional(),
