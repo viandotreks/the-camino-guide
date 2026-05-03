@@ -39,6 +39,8 @@ if (missing.length) {
 // ─── CLIENTS ─────────────────────────────────────────────────────────────────
 
 const notion = new Client({ auth: NOTION_API_KEY });
+// Silent client used only to probe whether an ID is a database page ID (see getDataSourceId)
+const silentNotion = new Client({ auth: NOTION_API_KEY!, logger: () => {} });
 
 const n2m = new NotionToMarkdown({ notionClient: notion });
 
@@ -210,7 +212,7 @@ const dataSourceIdCache = new Map<string, string>();
 async function getDataSourceId(databaseId: string): Promise<string> {
   if (dataSourceIdCache.has(databaseId)) return dataSourceIdCache.get(databaseId)!;
   try {
-    const db = await notion.databases.retrieve({ database_id: databaseId }) as any;
+    const db = await silentNotion.databases.retrieve({ database_id: databaseId }) as any;
     const dsId: string = db.data_sources?.[0]?.id ?? databaseId;
     dataSourceIdCache.set(databaseId, dsId);
     return dsId;
