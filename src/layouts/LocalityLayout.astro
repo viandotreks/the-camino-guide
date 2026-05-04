@@ -11,9 +11,9 @@ const { locality, activeTab = 'guide' } = Astro.props;
 const l = locality.data;
 
 const metaCells = [
-  { key: 'Region',     val: l.region ?? '—' },
-  { key: 'Population', val: l.population != null ? l.population.toLocaleString('en-US') : '—' },
-  { key: 'Languages',  val: l.languages.join(', ') },
+  { key: 'To Santiago', val: `${l.km_to_santiago.toLocaleString('en-US')} km` },
+  { key: 'Population',  val: l.population != null ? l.population.toLocaleString('en-US') : '—' },
+  { key: 'Languages',   val: l.languages.join(', ') },
 ];
 
 const services = [
@@ -52,15 +52,6 @@ const services = [
       <div class="locality-header__alt cg-data">({l.name_alt})</div>
     )}
 
-    <!-- km to Santiago — prominent -->
-    <div class="km-box">
-      <span class="km-box__label">to Santiago</span>
-      <span>
-        <span class="km-box__num">{l.km_to_santiago.toLocaleString('en-US')}</span>
-        <span class="km-box__unit">km</span>
-      </span>
-    </div>
-
     <!-- Secondary data grid -->
     <div class="locality-meta-grid">
       {metaCells.map(cell => (
@@ -72,14 +63,12 @@ const services = [
     </div>
   </header>
 
-  <!-- Map -->
-  <div class="map-area" data-pagefind-ignore>
-    {l.map_embed ? (
-      <Fragment set:html={l.map_embed} />
-    ) : (
-      <div class="map-area__placeholder">Outdooractive · Map embed</div>
-    )}
-  </div>
+  <!-- Cover image -->
+  {l.coverImage && (
+    <div class="locality-cover" data-pagefind-ignore>
+      <img src={l.coverImage} alt={l.name} class="locality-cover__img" />
+    </div>
+  )}
 
   <!-- Tab bar -->
   <div class="tab-bar tab-bar--2" role="tablist" id="locality-tabs" data-pagefind-ignore>
@@ -106,7 +95,7 @@ const services = [
 
     <!-- Tab panel: Guide -->
     <div id="tab-guide" class="tab-panel" data-tab="guide" role="tabpanel">
-      <slot />
+      <div class="prose"><slot /></div>
       {l.last_verified && (
         <div class="verified-block">
           <div class="verified-block__row">

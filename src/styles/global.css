@@ -752,6 +752,13 @@ details.data-panel:not([open]) .data-panel__icon::after { content: "+"; }
   line-height: 1.6;
   color: var(--ink);
 }
+.prose h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-top: 1.8em;
+  margin-bottom: 0.5em;
+}
 .prose p { margin-bottom: 14px; }
 .prose p:last-child { margin-bottom: 0; }
 .prose strong { font-weight: 600; }
@@ -961,40 +968,6 @@ details.data-panel:not([open]) .data-panel__icon::after { content: "+"; }
   margin-top: 4px;
   letter-spacing: 0.02em;
 }
-.km-box {
-  margin-top: 16px;
-  padding: 12px 14px;
-  border: 1px solid var(--rule);
-  background: var(--paper-2);
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-.km-box__label {
-  font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-.km-box__num {
-  font-family: var(--serif);
-  font-size: 28px;
-  font-weight: 600;
-  color: var(--ink);
-  letter-spacing: -0.01em;
-  font-variant-numeric: tabular-nums;
-}
-.km-box__unit {
-  font-family: var(--sans);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink-3);
-  margin-left: 6px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
 .locality-meta-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1027,6 +1000,20 @@ details.data-panel:not([open]) .data-panel__icon::after { content: "+"; }
     margin: 0 auto;
   }
   .locality-header h1 { font-size: 40px; }
+}
+
+.locality-cover {
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  overflow: hidden;
+  background: var(--paper-2);
+}
+
+.locality-cover__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* ─── Route pillar page ──────────────────────────────────────────── */
