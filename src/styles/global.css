@@ -753,11 +753,26 @@ details.data-panel:not([open]) .data-panel__icon::after { content: "+"; }
   color: var(--ink);
 }
 .prose h2 {
-  font-size: 1.15rem;
+  font-family: var(--sans);
+  font-size: 16px;
   font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin-top: 28px;
+  margin-bottom: 10px;
   line-height: 1.2;
-  margin-top: 1.8em;
-  margin-bottom: 0.5em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.prose h2::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  flex-shrink: 0;
 }
 .prose p { margin-bottom: 14px; }
 .prose p:last-child { margin-bottom: 0; }
