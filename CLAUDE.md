@@ -156,7 +156,8 @@ Estimated time  Text        "7–8 hours"
 Start locality  Text        "Saint-Jean-Pied-de-Port"
 End locality    Text        "Roncesvalles"
 SEO description Text        Meta description copy
-Map url         URL         Outdooractive embed link
+Map url         URL         Outdooractive external navigation link (opens in app/browser, not embedded)
+Cartography     Files       Static route map infographic — uploaded to R2 at build time
 Track type      Select      Main | Alternative
 Branch from     Number      Stage number of parent stage (alternatives only)
 In short        Text        Opening paragraph
@@ -166,7 +167,7 @@ Services intro  Text        Intro paragraph for the Services tab
 Step by step    Rich text   Main body — the walk description (page body)
 ```
 
-Note: Stage pages do NOT have a Cover image. The map is embedded via `Map url` (Outdooractive).
+Note: Stage pages do NOT have a Cover image. Cartography is a static infographic image (uploaded to R2). Map url is an external navigation link, not an embed.
 
 ### Localities
 ```
