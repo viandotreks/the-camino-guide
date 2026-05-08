@@ -373,6 +373,10 @@ button { font-family: inherit; cursor: pointer; }
 
 @media (min-width: 900px) {
   .map-area { height: 320px; }
+  .map-area--cartography {
+    padding: 0 var(--gutter-desk);
+    box-sizing: border-box;
+  }
 }
 
 /* ─── Tab bar ────────────────────────────────────────────────────── */
