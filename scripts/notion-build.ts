@@ -462,7 +462,7 @@ async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
 
     const trackType  = select(page, 'Track type') || undefined;
     const branchFrom = num(page, 'Branch from') || undefined;
-    const mapUrl     = text(page, 'Map url') || undefined;
+    const mapUrl     = normalizeUrl(page.properties['Map url']?.url);
     const distMi     = num(page, 'Distance mi') || undefined;
 
     const frontmatter = fm({
