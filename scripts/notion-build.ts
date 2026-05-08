@@ -437,6 +437,11 @@ async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
 
   const sorted = orderStages(pages);
   const slugs  = sorted.map(p => text(p, 'Slug'));
+
+  // Sequential nav uses only main stages — alternatives branch off, not sequential
+  const mainPages = sorted.filter(p => select(p, 'Track type') !== 'Alternative');
+  const mainSlugs = mainPages.map(p => text(p, 'Slug'));
+
   clearDir(OUT.stages);
 
   for (let i = 0; i < sorted.length; i++) {
@@ -485,8 +490,19 @@ async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
       branch_from:        branchFrom,
       map_url:            mapUrl,
       cartography_url:    cartographyUrl ?? undefined,
-      prev_stage_slug:    slugs[i - 1] ?? null,
-      next_stage_slug:    slugs[i + 1] ?? null,
+      prev_stage_slug:    (() => {
+        if (trackType === 'Alternative') return null;
+        const idx = mainSlugs.indexOf(slug);
+        return idx > 0 ? mainSlugs[idx - 1] : null;
+      })(),
+      next_stage_slug:    (() => {
+        if (trackType === 'Alternative') {
+          const parentIdx = mainPages.findIndex(p => num(p, 'Stage number') === (branchFrom ?? -1));
+          return parentIdx >= 0 && parentIdx < mainSlugs.length - 1 ? mainSlugs[parentIdx + 1] : null;
+        }
+        const idx = mainSlugs.indexOf(slug);
+        return idx < mainSlugs.length - 1 ? mainSlugs[idx + 1] : null;
+      })(),
       in_short:           html(page, 'In short', true),
       watch_out_for,
       for_bikers:         html(page, 'For bikers', true) || undefined,
