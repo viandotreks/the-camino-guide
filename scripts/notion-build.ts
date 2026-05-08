@@ -213,6 +213,15 @@ async function getCoverImage(page: any): Promise<string | null> {
   return processImage(url, `notion-cover/${page.id}.webp`);
 }
 
+async function getCartographyImage(page: any): Promise<string | null> {
+  const files = page.properties['Cartography']?.files;
+  if (!files?.length) return null;
+  const file = files[0];
+  const url  = file.type === 'external' ? file.external.url : file.file?.url;
+  if (!url) return null;
+  return processImage(url, `notion-cartography/${page.id}.webp`);
+}
+
 // Cache database_id → data_source_id to avoid redundant retrieve calls
 const dataSourceIdCache = new Map<string, string>();
 
@@ -438,8 +447,9 @@ async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
     const routeIds  = relationIds(page, 'Route');
     const routeSlug = routeIds.length ? (routeSlugMap.get(routeIds[0]) ?? '') : '';
 
-    const coverImage = await getCoverImage(page);
-    const body       = await toMarkdown(page.id);
+    const coverImage      = await getCoverImage(page);
+    const cartographyUrl  = await getCartographyImage(page);
+    const body            = await toMarkdown(page.id);
 
     // watch_out_for: split rich_text on newlines, preserving inline formatting per line
     const watch_out_for = richTextToLines(page.properties['Watch out']?.rich_text ?? []);
@@ -474,6 +484,7 @@ async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
       track_type:         trackType,
       branch_from:        branchFrom,
       map_url:            mapUrl,
+      cartography_url:    cartographyUrl ?? undefined,
       prev_stage_slug:    slugs[i - 1] ?? null,
       next_stage_slug:    slugs[i + 1] ?? null,
       in_short:           html(page, 'In short', true),
@@ -509,20 +520,21 @@ async function buildLocalities(routeSlugMap: Map<string, string>): Promise<void>
     const body       = await toMarkdown(page.id);
 
     const frontmatter = fm({
-      name:           text(page, 'Name'),
-      route:          routeSlug,
-      km_to_santiago: num(page, 'Km to Santiago'),
-      population:     num(page, 'Population') || undefined,
-      languages:      multiSelect(page, 'Languages'),
-      country:        'Spain',
-      has_albergue:   false,
-      has_hotel:      false,
-      has_atm:        false,
-      has_pharmacy:   false,
+      name:            text(page, 'Name'),
+      route:           routeSlug,
+      km_to_santiago:  num(page, 'Km to Santiago'),
+      population:      num(page, 'Population') || undefined,
+      languages:       multiSelect(page, 'Languages'),
+      country:         'Spain',
+      has_albergue:    false,
+      has_hotel:       false,
+      has_atm:         false,
+      has_pharmacy:    false,
       has_supermarket: false,
-      has_medical:    false,
-      coverImage:     coverImage ?? undefined,
-      published:      true,
+      has_medical:     false,
+      seo_description: text(page, 'SEO description') || undefined,
+      coverImage:      coverImage ?? undefined,
+      published:       true,
     });
 
     fs.writeFileSync(path.join(OUT.localities, `${slug}.md`), `${frontmatter}\n\n${body}`);

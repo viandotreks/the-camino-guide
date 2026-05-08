@@ -170,12 +170,18 @@ const nextStage = s.next_stage_slug
     </div>
   </header>
 
-  <!-- Map -->
-  <div class="map-area" data-pagefind-ignore>
-    {s.map_embed ? (
-      <Fragment set:html={s.map_embed} />
+  <!-- Cartography -->
+  <div class={`map-area${s.cartography_url ? ' map-area--cartography' : ''}`} data-pagefind-ignore>
+    {s.cartography_url ? (
+      <img
+        src={s.cartography_url}
+        alt={`Route map for ${s.title}`}
+        class="map-area__cartography"
+        loading="lazy"
+        decoding="async"
+      />
     ) : (
-      <div class="map-area__placeholder">Outdooractive · Map embed</div>
+      <div class="map-area__placeholder">Route map coming soon</div>
     )}
   </div>
 
@@ -408,6 +414,16 @@ const nextStage = s.next_stage_slug
 </script>
 
 <style>
+  /* ── Cartography image ───────────────────────────────────── */
+  :global(.map-area--cartography) {
+    height: auto;
+  }
+  .map-area__cartography {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
   /* Responsive visibility helpers (scoped to this layout) */
   .hide-on-desktop { display: block; }
   .hide-on-mobile  { display: none; }
