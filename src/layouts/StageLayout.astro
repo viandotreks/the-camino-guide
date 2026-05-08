@@ -101,6 +101,13 @@ const prevStage = s.prev_stage_slug
 const nextStage = s.next_stage_slug
   ? allStages.find(st => st.slug === s.next_stage_slug)
   : null;
+
+// Alternative / main route link
+const isAlt = s.track_type === 'Alternative';
+const altStage = isAlt
+  ? allStages.find(st => st.data.route === s.route && st.data.order === s.branch_from && st.data.track_type !== 'Alternative')
+  : allStages.find(st => st.data.route === s.route && st.data.branch_from === s.order && st.data.track_type === 'Alternative')
+  ?? null;
 ---
 
 <BaseLayout
@@ -383,7 +390,17 @@ const nextStage = s.next_stage_slug
       </div>
 
       <!-- Sequential navigation -->
-      <nav class="seq-nav" aria-label="Adjacent stages" data-pagefind-ignore>
+      <nav class={`seq-nav${altStage ? ' seq-nav--with-alt' : ''}`} aria-label="Adjacent stages" data-pagefind-ignore>
+
+        {/* Alternative row — mobile: full width above; desktop: middle column */}
+        {altStage && (
+          <a href={`/${s.route}/${altStage.slug}`} class="seq-nav__link seq-nav__link--alt">
+            <span class="seq-nav__label">{isAlt ? '← Main route' : 'Alternative route →'}</span>
+            <span class="seq-nav__title">{altStage.data.title}</span>
+          </a>
+        )}
+
+        {/* Prev / Next row */}
         {s.prev_stage_slug ? (
           <a href={`/${s.route}/${s.prev_stage_slug}`} class="seq-nav__link">
             <span class="seq-nav__label">← Previous</span>
