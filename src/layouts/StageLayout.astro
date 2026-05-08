@@ -158,16 +158,6 @@ const nextStage = s.next_stage_slug
       </div>
     </div>
 
-    <!-- Stats — mobile (single line: difficulty · distance · ETA) -->
-    <div class="page-header__stats hide-on-desktop">
-      <span class={`diff-badge diff-badge--${diffClass}`}>
-        {s.difficulty}
-      </span>
-      <span class="page-header__divider"></span>
-      <span class="page-header__dist">{s.distance_km} km</span>
-      <span class="page-header__divider"></span>
-      <span class="page-header__time">{s.estimated_time_h}</span>
-    </div>
   </header>
 
   <!-- Cartography -->
@@ -190,13 +180,13 @@ const nextStage = s.next_stage_slug
     <div class="map-actions" data-pagefind-ignore>
       {s.cartography_url && (
         <button class="map-btn" id="open-cartography-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 15 6 6"/><path d="m15 9 6-6"/><path d="M21 16v5h-5"/><path d="M21 8V3h-5"/><path d="M3 16v5h5"/><path d="m3 21 6-6"/><path d="M3 8V3h5"/><path d="M9 9 3 3"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 15 6 6"/><path d="m15 9 6-6"/><path d="M21 16v5h-5"/><path d="M21 8V3h-5"/><path d="M3 16v5h5"/><path d="m3 21 6-6"/><path d="M3 8V3h5"/><path d="M9 9 3 3"/></svg>
           Cartography
         </button>
       )}
       {s.map_url && (
         <a class="map-btn map-btn--link" href={s.map_url} target="_blank" rel="noopener noreferrer">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 19 21 12 17 5 21 12 2"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 19 21 12 17 5 21 12 2"/></svg>
           Interactive Map
         </a>
       )}
@@ -276,11 +266,11 @@ const nextStage = s.next_stage_slug
       <!-- Tab panel: The Guide -->
       <div id="tab-guide" class="tab-panel" data-tab="guide" role="tabpanel">
 
-        <!-- Mobile collapsible data panel -->
-        <details class="data-panel" data-pagefind-ignore>
+        <!-- Mobile collapsible data panel (open by default) -->
+        <details class="data-panel" open data-pagefind-ignore>
           <summary>
             <div class="data-panel__label-row">
-              <span class="cg-eyebrow">Stage data</span>
+              <span class="cg-eyebrow data-panel__title">Stage Data</span>
               <span class="data-panel__preview">{panelPreview}</span>
             </div>
             <span class="data-panel__icon" aria-hidden></span>
@@ -460,6 +450,36 @@ const nextStage = s.next_stage_slug
 </script>
 
 <style>
+  /* ── Data panel open state ───────────────────────────────── */
+  /* When open: summary looks like a static eyebrow heading */
+  :global(details.data-panel[open]) summary {
+    cursor: default;
+  }
+  :global(details.data-panel[open]) .data-panel__preview,
+  :global(details.data-panel[open]) .data-panel__icon {
+    display: none;
+  }
+  :global(details.data-panel[open]) .data-panel__title {
+    font-family: var(--sans);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 4px 0 2px;
+  }
+  /* When closed: restore interactive appearance */
+  :global(details.data-panel:not([open])) summary {
+    cursor: pointer;
+  }
+  :global(details.data-panel:not([open])) .data-panel__title {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    margin: 0;
+  }
+
   /* ── Map actions ─────────────────────────────────────────── */
   .map-actions {
     display: flex;
@@ -470,10 +490,12 @@ const nextStage = s.next_stage_slug
   }
 
   .map-btn {
+    flex: 1;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 8px 16px;
+    padding: 10px 12px;
     border: none;
     border-radius: 6px;
     background: rgb(231, 112, 103);
