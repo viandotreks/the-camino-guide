@@ -373,7 +373,17 @@ button { font-family: inherit; cursor: pointer; }
 
 @media (min-width: 900px) {
   .map-area { height: 320px; }
-  .map-area--cartography {
+}
+
+.map-area__body {
+  width: 100%;
+  height: 100%;
+}
+
+@media (min-width: 900px) {
+  .map-area--cartography .map-area__body {
+    max-width: var(--max-w);
+    margin: 0 auto;
     padding: 0 var(--gutter-desk);
     box-sizing: border-box;
   }
@@ -823,6 +833,16 @@ details.data-panel:not([open]) .data-panel__icon::after { content: "+"; }
   border-top: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
   margin: 32px calc(-1 * var(--gutter-mob)) 0;
+}
+
+@media (min-width: 900px) {
+  .map-actions {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding-left: var(--gutter-desk);
+    padding-right: var(--gutter-desk);
+    box-sizing: border-box;
+  }
 }
 
 /* Mobile: alt link spans full width above prev/next */

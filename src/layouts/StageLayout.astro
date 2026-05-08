@@ -170,13 +170,15 @@ const altStage = isAlt
   <!-- Cartography -->
   <div class={`map-area${s.cartography_url ? ' map-area--cartography' : ''}`} data-pagefind-ignore>
     {s.cartography_url ? (
-      <img
-        src={s.cartography_url}
-        alt={`Route map for ${s.title}`}
-        class="map-area__cartography"
-        loading="lazy"
-        decoding="async"
-      />
+      <div class="map-area__body">
+        <img
+          src={s.cartography_url}
+          alt={`Route map for ${s.title}`}
+          class="map-area__cartography"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
     ) : (
       <div class="map-area__placeholder">Route map coming soon</div>
     )}
