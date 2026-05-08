@@ -576,6 +576,13 @@ const altStage = isAlt
     height: auto;
   }
 
+  @media (min-width: 900px) {
+    :global(.map-area--cartography) {
+      padding: 0 var(--gutter-desk);
+      box-sizing: border-box;
+    }
+  }
+
   /* Responsive visibility helpers (scoped to this layout) */
   .hide-on-desktop { display: block; }
   .hide-on-mobile  { display: none; }
