@@ -78,8 +78,7 @@ const stagesWithLetters = stages.map(s => {
   <div class="stage-list">
     {stagesWithLetters.map(({ stage, letter }) => {
       const sd = stage.data;
-      const gainStr = `+${sd.elevation_gain_m.toLocaleString('en-US')} m`;
-      const lossStr = `−${sd.elevation_loss_m.toLocaleString('en-US')} m`;
+      const mi = (sd.distance_km * 0.621371).toFixed(1);
       return (
         <a
           href={`/${sd.route}/${stage.slug}`}
@@ -88,9 +87,7 @@ const stagesWithLetters = stages.map(s => {
           <span class="stage-row__num">{String(sd.order).padStart(2, '0')}{letter}</span>
           <span class="stage-row__content">
             <span class="stage-row__title">{sd.title}</span>
-            <span class="stage-row__meta">
-              {sd.distance_km} km · {gainStr} / {lossStr}
-            </span>
+            <span class="stage-row__meta">{sd.distance_km} km · {mi} mi</span>
           </span>
         </a>
       );
