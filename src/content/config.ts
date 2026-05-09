@@ -67,6 +67,7 @@ const stages = defineCollection({
     // Map
     map_url: z.string().url().optional(),
     cartography_url: z.string().url().optional(),
+    elevation_url:   z.string().url().optional(),
 
     // Services (from Services database, grouped per stage at build time)
     services: z.array(z.object({

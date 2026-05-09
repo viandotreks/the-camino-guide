@@ -108,6 +108,17 @@ const altStage = isAlt
   ? allStages.find(st => st.data.route === s.route && st.data.order === s.branch_from && st.data.track_type !== 'Alternative')
   : allStages.find(st => st.data.route === s.route && st.data.branch_from === s.order && st.data.track_type === 'Alternative')
   ?? null;
+
+// Map carousel slides
+interface MapSlide { url: string; label: string; alt: string; }
+const mapSlides: MapSlide[] = (
+  [
+    s.cartography_url ? { url: s.cartography_url, label: 'Cartography',       alt: `Route map for ${s.title}` }         : null,
+    s.elevation_url   ? { url: s.elevation_url,   label: 'Elevation Profile',  alt: `Elevation profile for ${s.title}` } : null,
+  ] as (MapSlide | null)[]
+).filter((x): x is MapSlide => x !== null);
+const hasMapImages      = mapSlides.length > 0;
+const hasMultipleSlides = mapSlides.length > 1;
 ---
 
 <BaseLayout
@@ -167,29 +178,61 @@ const altStage = isAlt
 
   </header>
 
-  <!-- Cartography -->
-  <div class={`map-area${s.cartography_url ? ' map-area--cartography' : ''}`} data-pagefind-ignore>
-    {s.cartography_url ? (
-      <div class="map-area__body">
-        <img
-          id="cartography-img"
-          src={s.cartography_url}
-          alt={`Route map for ${s.title}`}
-          class="map-area__cartography"
-          loading="lazy"
-          decoding="async"
-          style="cursor: zoom-in;"
-        />
+  <!-- Map area: carousel (or static if single image, or placeholder) -->
+  <div class={`map-area${hasMapImages ? ' map-area--cartography' : ''}`} data-pagefind-ignore>
+    {hasMapImages ? (
+      <div class="map-area__body map-area__body--carousel">
+        <div class="map-carousel" id="map-carousel">
+          <div class="map-carousel__track" id="map-carousel-track">
+            {mapSlides.map((slide, i) => (
+              <div class="map-carousel__slide" data-slide-index={String(i)}>
+                <img
+                  src={slide.url}
+                  alt={slide.alt}
+                  class="map-area__cartography"
+                  loading="lazy"
+                  decoding="async"
+                  style="cursor: zoom-in;"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+        {hasMultipleSlides && (
+          <button class="map-carousel__arrow map-carousel__arrow--prev" id="carousel-prev" aria-label="Previous slide">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+        )}
+        {hasMultipleSlides && (
+          <button class="map-carousel__arrow map-carousel__arrow--next" id="carousel-next" aria-label="Next slide">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        )}
       </div>
     ) : (
       <div class="map-area__placeholder">Route map coming soon</div>
     )}
   </div>
 
+  <!-- Slide indicators (only when 2+ slides) -->
+  {hasMultipleSlides && (
+    <div class="map-carousel__indicators" data-pagefind-ignore>
+      {mapSlides.map((slide, i) => (
+        <button
+          class={`map-carousel__dot${i === 0 ? ' map-carousel__dot--active' : ''}`}
+          data-slide={String(i)}
+          aria-label={slide.label}
+        >
+          {slide.label}
+        </button>
+      ))}
+    </div>
+  )}
+
   <!-- Map actions -->
-  {(s.cartography_url || s.map_url) && (
+  {(hasMapImages || s.map_url) && (
     <div data-pagefind-ignore>
-      {s.cartography_url && (
+      {hasMapImages && (
         <p class="carto-hint">Double-tap image to enlarge</p>
       )}
       <div class="map-actions">
@@ -209,11 +252,11 @@ const altStage = isAlt
     </div>
   )}
 
-  <!-- Cartography fullscreen overlay (double-tap / double-click on image) -->
-  {s.cartography_url && (
+  <!-- Fullscreen overlay (src set dynamically from active slide) -->
+  {hasMapImages && (
     <div id="cartography-overlay" class="carto-overlay" hidden aria-modal="true" role="dialog">
       <button class="carto-overlay__close" id="close-cartography-btn" aria-label="Close">✕</button>
-      <img src={s.cartography_url} alt={`Route map for ${s.title}`} class="carto-overlay__img" />
+      <img id="overlay-img" src={mapSlides[0].url} alt="" class="carto-overlay__img" />
     </div>
   )}
 
@@ -536,28 +579,75 @@ const altStage = isAlt
 
 </BaseLayout>
 
-<!-- Tab switching -->
+<!-- Tab switching + carousel + overlays -->
 <script>
-  // ── Cartography fullscreen (double-tap / dblclick on image) ──
-  const cartoImg   = document.getElementById('cartography-img');
-  const closeBtn   = document.getElementById('close-cartography-btn');
-  const overlay    = document.getElementById('cartography-overlay');
+  // ── Map carousel ───────────────────────────────────────────
+  const carouselTrack  = document.getElementById('map-carousel-track') as HTMLElement | null;
+  const carouselSlides = document.querySelectorAll<HTMLElement>('.map-carousel__slide');
+  const carouselDots   = document.querySelectorAll<HTMLElement>('.map-carousel__dot');
+  const prevBtn        = document.getElementById('carousel-prev');
+  const nextBtn        = document.getElementById('carousel-next');
 
-  if (cartoImg && overlay) {
+  let currentSlide = 0;
+  const totalSlides = carouselSlides.length;
+
+  function goToSlide(n: number) {
+    currentSlide = Math.max(0, Math.min(n, totalSlides - 1));
+    if (carouselTrack) {
+      carouselTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+    }
+    carouselDots.forEach((dot, i) => {
+      dot.classList.toggle('map-carousel__dot--active', i === currentSlide);
+    });
+  }
+
+  prevBtn?.addEventListener('click', () => goToSlide(currentSlide - 1));
+  nextBtn?.addEventListener('click', () => goToSlide(currentSlide + 1));
+
+  carouselDots.forEach((dot, i) => {
+    dot.addEventListener('click', () => goToSlide(i));
+  });
+
+  // Touch swipe (mobile)
+  if (carouselTrack && totalSlides > 1) {
+    let touchStartX = 0;
+    carouselTrack.addEventListener('touchstart', (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    carouselTrack.addEventListener('touchend', (e: TouchEvent) => {
+      const diff = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 40) goToSlide(currentSlide + (diff > 0 ? 1 : -1));
+    }, { passive: true });
+  }
+
+  // ── Fullscreen overlay ─────────────────────────────────────
+  const overlay    = document.getElementById('cartography-overlay');
+  const overlayImg = document.getElementById('overlay-img') as HTMLImageElement | null;
+  const closeBtn   = document.getElementById('close-cartography-btn');
+
+  // Double-tap / dblclick on any slide image → open overlay with that image
+  carouselSlides.forEach((slide) => {
+    const img = slide.querySelector('img') as HTMLImageElement | null;
+    if (!img || !overlay || !overlayImg) return;
     let lastTap = 0;
-    cartoImg.addEventListener('click', () => {
+    img.addEventListener('click', () => {
       const now = Date.now();
       if (now - lastTap < 350) {
+        overlayImg.src = img.src;
+        overlayImg.alt = img.alt;
         overlay.hidden = false;
         document.body.style.overflow = 'hidden';
       }
       lastTap = now;
     });
-    cartoImg.addEventListener('dblclick', () => {
+    img.addEventListener('dblclick', () => {
+      overlayImg.src = img.src;
+      overlayImg.alt = img.alt;
       overlay.hidden = false;
       document.body.style.overflow = 'hidden';
     });
-  }
+  });
+
   if (closeBtn && overlay) {
     closeBtn.addEventListener('click', () => {
       overlay.hidden = true;
@@ -566,9 +656,9 @@ const altStage = isAlt
   }
 
   // ── Legend modal ───────────────────────────────────────────
-  const openLegendBtn   = document.getElementById('open-legend-btn');
-  const closeLegendBtn  = document.getElementById('close-legend-btn');
-  const legendOverlay   = document.getElementById('legend-overlay');
+  const openLegendBtn  = document.getElementById('open-legend-btn');
+  const closeLegendBtn = document.getElementById('close-legend-btn');
+  const legendOverlay  = document.getElementById('legend-overlay');
 
   if (openLegendBtn && legendOverlay) {
     openLegendBtn.addEventListener('click', () => {
@@ -594,6 +684,7 @@ const altStage = isAlt
     }
   });
 
+  // ── Tab switching ──────────────────────────────────────────
   const tabBar = document.getElementById('stage-tabs');
   if (tabBar) {
     const btns   = tabBar.querySelectorAll<HTMLButtonElement>('.tab-bar__btn');
@@ -638,6 +729,84 @@ const altStage = isAlt
     letter-spacing: 0.06em;
     color: var(--ink-3);
     margin: 0;
+  }
+
+  /* ── Map carousel ───────────────────────────────────────── */
+  .map-area__body {
+    position: relative; /* anchor for absolutely-positioned arrows */
+  }
+
+  .map-carousel {
+    overflow: hidden;
+  }
+
+  .map-carousel__track {
+    display: flex;
+    transition: transform 0.32s ease;
+    will-change: transform;
+  }
+
+  .map-carousel__slide {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Arrow buttons — desktop only */
+  .map-carousel__arrow {
+    display: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.15s;
+  }
+  .map-carousel__arrow:hover { opacity: 0.75; }
+  .map-carousel__arrow--prev { left: 12px; }
+  .map-carousel__arrow--next { right: 12px; }
+
+  @media (min-width: 900px) {
+    .map-carousel__arrow { display: flex; }
+  }
+
+  /* Slide indicators */
+  .map-carousel__indicators {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 16px 2px;
+    background: var(--paper);
+  }
+
+  .map-carousel__dot {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    cursor: pointer;
+    padding: 4px 12px;
+    transition: all 0.15s;
+  }
+  .map-carousel__dot--active {
+    color: var(--ink);
+    background: var(--rule);
+  }
+  .map-carousel__dot:hover:not(.map-carousel__dot--active) {
+    color: var(--ink-2);
   }
 
   /* ── Cartography hint ────────────────────────────────────── */

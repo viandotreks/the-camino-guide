@@ -222,6 +222,15 @@ async function getCartographyImage(page: any): Promise<string | null> {
   return processImage(url, `notion-cartography/${page.id}.webp`);
 }
 
+async function getElevationImage(page: any): Promise<string | null> {
+  const files = page.properties['Elevation']?.files;
+  if (!files?.length) return null;
+  const file = files[0];
+  const url  = file.type === 'external' ? file.external.url : file.file?.url;
+  if (!url) return null;
+  return processImage(url, `notion-elevation/${page.id}.webp`);
+}
+
 // Cache database_id → data_source_id to avoid redundant retrieve calls
 const dataSourceIdCache = new Map<string, string>();
 
@@ -454,6 +463,7 @@ async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
 
     const coverImage      = await getCoverImage(page);
     const cartographyUrl  = await getCartographyImage(page);
+    const elevationUrl    = await getElevationImage(page);
     const body            = await toMarkdown(page.id);
 
     // watch_out_for: split rich_text on newlines, preserving inline formatting per line
@@ -490,6 +500,7 @@ async function buildStages(routeSlugMap: Map<string, string>): Promise<void> {
       branch_from:        branchFrom,
       map_url:            mapUrl,
       cartography_url:    cartographyUrl ?? undefined,
+      elevation_url:      elevationUrl   ?? undefined,
       prev_stage_slug:    (() => {
         if (trackType === 'Alternative') return null;
         const idx = mainSlugs.indexOf(slug);
