@@ -32,6 +32,11 @@ const stagesWithLetters = stages.map(s => {
   }
   return { stage: s, letter };
 });
+
+const allLocalities = await getCollection('localities', ({ data }) =>
+  data.route === route.slug && data.published
+);
+const localities = allLocalities.sort((a, b) => b.data.km_to_santiago - a.data.km_to_santiago);
 ---
 
 <BaseLayout
@@ -66,28 +71,66 @@ const stagesWithLetters = stages.map(s => {
     </div>
   )}
 
-  <!-- Stage list -->
-  <div class="container" style="padding-bottom: 0;" data-pagefind-ignore>
-    <h2 class="section-eyebrow" style="margin-bottom: 16px;">Stages</h2>
+  <!-- Tab bar -->
+  <div class="tab-bar tab-bar--2" role="tablist" id="route-tabs" data-pagefind-ignore>
+    <button class="tab-bar__btn" role="tab" data-tab="stages" aria-selected="true" aria-controls="tab-stages">
+      Stages
+    </button>
+    <button class="tab-bar__btn" role="tab" data-tab="localities" aria-selected="false" aria-controls="tab-localities">
+      Localities
+    </button>
   </div>
 
-  <div class="stage-list">
-    {stagesWithLetters.map(({ stage, letter }) => {
-      const sd = stage.data;
-      const mi = (sd.distance_km * 0.621371).toFixed(1);
-      return (
-        <a
-          href={`/${sd.route}/${stage.slug}`}
-          class="stage-row"
-        >
-          <span class="stage-row__num">{String(sd.order).padStart(2, '0')}{letter}</span>
-          <span class="stage-row__content">
-            <span class="stage-row__title">{sd.title}</span>
-            <span class="stage-row__meta">{sd.distance_km} km · {mi} mi</span>
-          </span>
-        </a>
-      );
-    })}
+  <!-- Tab: Stages -->
+  <div id="tab-stages" class="tab-panel" data-tab="stages" role="tabpanel">
+    <div class="stage-list">
+      {stagesWithLetters.map(({ stage, letter }) => {
+        const sd = stage.data;
+        const mi = (sd.distance_km * 0.621371).toFixed(1);
+        return (
+          <a href={`/${sd.route}/${stage.slug}`} class="stage-row">
+            <span class="stage-row__num">{String(sd.order).padStart(2, '0')}{letter}</span>
+            <span class="stage-row__content">
+              <span class="stage-row__title">{sd.title}</span>
+              <span class="stage-row__meta">{sd.distance_km} km · {mi} mi</span>
+            </span>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+
+  <!-- Tab: Localities -->
+  <div id="tab-localities" class="tab-panel" data-tab="localities" role="tabpanel" hidden>
+    <div class="stage-list">
+      {localities.map((loc) => {
+        const ld = loc.data;
+        return (
+          <a href={`/${ld.route}/${loc.slug}`} class="stage-row">
+            <span class="stage-row__num stage-row__num--km">{ld.km_to_santiago}</span>
+            <span class="stage-row__content">
+              <span class="stage-row__title">{ld.name}</span>
+              <span class="stage-row__meta">{ld.km_to_santiago} km to Santiago</span>
+            </span>
+          </a>
+        );
+      })}
+    </div>
   </div>
 
 </BaseLayout>
+
+<script>
+  const tabBar = document.getElementById('route-tabs');
+  if (tabBar) {
+    const btns   = tabBar.querySelectorAll<HTMLButtonElement>('.tab-bar__btn');
+    const panels = document.querySelectorAll<HTMLElement>('.tab-panel');
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.tab;
+        btns.forEach(b => b.setAttribute('aria-selected', String(b === btn)));
+        panels.forEach(p => { p.hidden = p.dataset.tab !== target; });
+      });
+    });
+  }
+</script>
