@@ -36,7 +36,7 @@ const stagesWithLetters = stages.map(s => {
 const allLocalities = await getCollection('localities', ({ data }) =>
   data.route === route.slug && data.published
 );
-const localities = allLocalities.sort((a, b) => b.data.km_to_santiago - a.data.km_to_santiago);
+const localities = allLocalities.sort((a, b) => a.data.name.localeCompare(b.data.name));
 ---
 
 <BaseLayout
@@ -106,8 +106,7 @@ const localities = allLocalities.sort((a, b) => b.data.km_to_santiago - a.data.k
       {localities.map((loc) => {
         const ld = loc.data;
         return (
-          <a href={`/${ld.route}/${loc.slug}`} class="stage-row">
-            <span class="stage-row__num stage-row__num--km">{ld.km_to_santiago}</span>
+          <a href={`/${ld.route}/${loc.slug}`} class="stage-row stage-row--locality">
             <span class="stage-row__content">
               <span class="stage-row__title">{ld.name}</span>
               <span class="stage-row__meta">{ld.km_to_santiago} km to Santiago</span>
