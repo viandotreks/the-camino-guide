@@ -564,12 +564,6 @@ const altStage = isAlt
       document.body.style.overflow = '';
     });
   }
-  document.addEventListener('keydown', (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      if (overlay && !overlay.hidden) { overlay.hidden = true; document.body.style.overflow = ''; }
-      if (legendOverlay && !legendOverlay.hidden) { legendOverlay.hidden = false; }
-    }
-  });
 
   // ── Legend modal ───────────────────────────────────────────
   const openLegendBtn   = document.getElementById('open-legend-btn');
@@ -591,6 +585,14 @@ const altStage = isAlt
       if (e.target === legendOverlay) { legendOverlay.hidden = true; document.body.style.overflow = ''; }
     });
   }
+
+  // ── Escape closes any open overlay ────────────────────────
+  document.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      if (overlay && !overlay.hidden) { overlay.hidden = true; document.body.style.overflow = ''; }
+      if (legendOverlay && !legendOverlay.hidden) { legendOverlay.hidden = true; document.body.style.overflow = ''; }
+    }
+  });
 
   const tabBar = document.getElementById('stage-tabs');
   if (tabBar) {
