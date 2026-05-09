@@ -1134,6 +1134,9 @@ details.data-panel:not([open]) .data-panel__icon::after { content: "+"; }
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+.stage-row__num--km {
+  font-size: 16px;
+}
 .stage-row__content {
   display: flex;
   flex-direction: column;
