@@ -1101,6 +1101,15 @@ details.data-panel:not([open]) .data-panel__icon::after { content: "+"; }
   font-variant-numeric: tabular-nums;
 }
 
+.route-intro {
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 640px;
+  margin: 0;
+}
+
 .stage-list {
   border-top: 1px solid var(--rule);
 }

@@ -11,9 +11,7 @@ export async function getStaticPaths() {
 }
 
 const { route } = Astro.props;
-const { Content } = await route.render();
 const r = route.data;
-const hasContent = route.body.trim().length > 0;
 
 const allStages = await getCollection('stages', ({ data }) =>
   data.route === route.slug && data.published
@@ -61,12 +59,10 @@ const stagesWithLetters = stages.map(s => {
     </div>
   </header>
 
-  <!-- Route overview prose (only rendered when the route has body content) -->
-  {hasContent && (
+  <!-- Route intro from Summary property -->
+  {r.subtitle && (
     <div class="container" style="padding-top: 24px; padding-bottom: 32px;">
-      <div class="prose" style="max-width: 640px;">
-        <Content />
-      </div>
+      <p class="route-intro">{r.subtitle}</p>
     </div>
   )}
 
