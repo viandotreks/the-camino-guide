@@ -1106,7 +1106,7 @@ details.data-panel:not([open]) .data-panel__icon::after { content: "+"; }
 }
 .stage-row {
   display: grid;
-  grid-template-columns: 2.5rem 1fr auto;
+  grid-template-columns: 3rem 1fr;
   gap: 12px;
   align-items: center;
   padding: 14px var(--gutter-mob);
@@ -1119,11 +1119,15 @@ details.data-panel:not([open]) .data-panel__icon::after { content: "+"; }
 .stage-row:hover { background: var(--paper-2); }
 .stage-row__num {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 20px;
   color: var(--ink-4);
-  font-weight: 600;
+  font-weight: 300;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+.stage-row__content {
+  display: flex;
+  flex-direction: column;
 }
 .stage-row__title {
   font-family: var(--serif);

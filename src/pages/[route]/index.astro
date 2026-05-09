@@ -13,18 +13,27 @@ export async function getStaticPaths() {
 const { route } = Astro.props;
 const { Content } = await route.render();
 const r = route.data;
+const hasContent = route.body.trim().length > 0;
 
 const allStages = await getCollection('stages', ({ data }) =>
   data.route === route.slug && data.published
 );
 const stages = allStages.sort((a, b) => a.data.order - b.data.order);
 
-const difficultyLabel: Record<string, string> = {
-  easy:        'Easy',
-  moderate:    'Moderate',
-  hard:        'Hard',
-  'very-hard': 'Very Hard',
-};
+// Assign A/B/C letters to stages that share the same order number
+const orderCount: Record<number, number> = {};
+stages.forEach(s => { orderCount[s.data.order] = (orderCount[s.data.order] || 0) + 1; });
+const orderLetterIdx: Record<number, number> = {};
+const stagesWithLetters = stages.map(s => {
+  const o = s.data.order;
+  let letter = '';
+  if (orderCount[o] > 1) {
+    orderLetterIdx[o] = orderLetterIdx[o] ?? 0;
+    letter = String.fromCharCode(65 + orderLetterIdx[o]);
+    orderLetterIdx[o]++;
+  }
+  return { stage: s, letter };
+});
 ---
 
 <BaseLayout
@@ -52,12 +61,14 @@ const difficultyLabel: Record<string, string> = {
     </div>
   </header>
 
-  <!-- Route overview prose -->
-  <div class="container" style="padding-top: 24px; padding-bottom: 32px;">
-    <div class="prose" style="max-width: 640px;">
-      <Content />
+  <!-- Route overview prose (only rendered when the route has body content) -->
+  {hasContent && (
+    <div class="container" style="padding-top: 24px; padding-bottom: 32px;">
+      <div class="prose" style="max-width: 640px;">
+        <Content />
+      </div>
     </div>
-  </div>
+  )}
 
   <!-- Stage list -->
   <div class="container" style="padding-bottom: 0;" data-pagefind-ignore>
@@ -65,7 +76,7 @@ const difficultyLabel: Record<string, string> = {
   </div>
 
   <div class="stage-list">
-    {stages.map((stage) => {
+    {stagesWithLetters.map(({ stage, letter }) => {
       const sd = stage.data;
       const gainStr = `+${sd.elevation_gain_m.toLocaleString('en-US')} m`;
       const lossStr = `−${sd.elevation_loss_m.toLocaleString('en-US')} m`;
@@ -74,16 +85,12 @@ const difficultyLabel: Record<string, string> = {
           href={`/${sd.route}/${stage.slug}`}
           class="stage-row"
         >
-          <span class="stage-row__num">{String(sd.order).padStart(2, '0')}</span>
-          <span>
+          <span class="stage-row__num">{String(sd.order).padStart(2, '0')}{letter}</span>
+          <span class="stage-row__content">
             <span class="stage-row__title">{sd.title}</span>
             <span class="stage-row__meta">
               {sd.distance_km} km · {gainStr} / {lossStr}
             </span>
-          </span>
-          <span class={`diff-badge diff-badge--${sd.difficulty}`}>
-            <span class="diff-badge__dot"></span>
-            {difficultyLabel[sd.difficulty]}
           </span>
         </a>
       );
