@@ -7,6 +7,7 @@ import { Client } from '@notionhq/client';
 import { NotionToMarkdown } from 'notion-to-md';
 import { S3Client, HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import sharp from 'sharp';
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
@@ -67,6 +68,14 @@ let imagesUploaded = 0;
 let imagesSkipped  = 0;
 
 // ─── IMAGE PIPELINE ──────────────────────────────────────────────────────────
+
+// Derive a stable R2 key from the Notion URL path (ignores expiring auth params).
+// When the file is replaced in Notion the path changes → new key → re-uploaded.
+function notionUrlToKey(notionUrl: string, prefix: string): string {
+  const urlPath = new URL(notionUrl).pathname;
+  const hash = crypto.createHash('sha1').update(urlPath).digest('hex').slice(0, 16);
+  return `${prefix}/${hash}.webp`;
+}
 
 async function processImage(notionUrl: string, r2Key: string): Promise<string> {
   try {
@@ -210,7 +219,7 @@ async function getCoverImage(page: any): Promise<string | null> {
   const file = files[0];
   const url  = file.type === 'external' ? file.external.url : file.file?.url;
   if (!url) return null;
-  return processImage(url, `notion-cover/${page.id}.webp`);
+  return processImage(url, notionUrlToKey(url, 'notion-cover'));
 }
 
 async function getCartographyImage(page: any): Promise<string | null> {
@@ -219,7 +228,7 @@ async function getCartographyImage(page: any): Promise<string | null> {
   const file = files[0];
   const url  = file.type === 'external' ? file.external.url : file.file?.url;
   if (!url) return null;
-  return processImage(url, `notion-cartography/${page.id}.webp`);
+  return processImage(url, notionUrlToKey(url, 'notion-cartography'));
 }
 
 async function getElevationImage(page: any): Promise<string | null> {
@@ -228,7 +237,7 @@ async function getElevationImage(page: any): Promise<string | null> {
   const file = files[0];
   const url  = file.type === 'external' ? file.external.url : file.file?.url;
   if (!url) return null;
-  return processImage(url, `notion-elevation/${page.id}.webp`);
+  return processImage(url, notionUrlToKey(url, 'notion-elevation'));
 }
 
 // Cache database_id → data_source_id to avoid redundant retrieve calls
@@ -271,7 +280,7 @@ n2m.setCustomTransformer('image', async (block: any) => {
   const img = block.image;
   const url  = img.type === 'external' ? img.external.url : img.file?.url;
   if (!url) return '';
-  const r2Url  = await processImage(url, `notion-img/${block.id}.webp`);
+  const r2Url  = await processImage(url, notionUrlToKey(url, 'notion-img'));
   const caption = img.caption?.map((c: any) => c.plain_text).join('') ?? '';
   return `![${caption}](${r2Url})`;
 });
