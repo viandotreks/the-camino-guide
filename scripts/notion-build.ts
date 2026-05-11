@@ -109,6 +109,51 @@ async function processImage(notionUrl: string, r2Key: string): Promise<string> {
   return `${R2_PUBLIC_URL}/${r2Key}`;
 }
 
+// Like processImage but preserves SVGs instead of rasterising them.
+// r2KeyBase must NOT include extension — this function appends .svg or .webp.
+async function processFile(notionUrl: string, r2KeyBase: string): Promise<string> {
+  const isSvg = new URL(notionUrl).pathname.toLowerCase().endsWith('.svg');
+  const r2Key = isSvg ? `${r2KeyBase}.svg` : `${r2KeyBase}.webp`;
+
+  try {
+    await r2.send(new HeadObjectCommand({ Bucket: R2_BUCKET_NAME!, Key: r2Key }));
+    imagesSkipped++;
+    return `${R2_PUBLIC_URL}/${r2Key}`;
+  } catch {
+    // Not in R2 yet
+  }
+
+  let buffer: Buffer;
+  try {
+    const res = await fetch(notionUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    buffer = Buffer.from(await res.arrayBuffer());
+  } catch (err) {
+    console.warn(`  [img] download failed for ${r2Key}: ${err}`);
+    return notionUrl;
+  }
+
+  if (isSvg) {
+    await r2.send(new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME!,
+      Key: r2Key,
+      Body: buffer,
+      ContentType: 'image/svg+xml',
+    }));
+  } else {
+    const webp = await sharp(buffer).webp({ quality: 85 }).toBuffer();
+    await r2.send(new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME!,
+      Key: r2Key,
+      Body: webp,
+      ContentType: 'image/webp',
+    }));
+  }
+
+  imagesUploaded++;
+  return `${R2_PUBLIC_URL}/${r2Key}`;
+}
+
 // ─── NOTION HELPERS ──────────────────────────────────────────────────────────
 
 function text(page: any, name: string): string {
@@ -228,7 +273,7 @@ async function getCartographyImage(page: any): Promise<string | null> {
   const file = files[0];
   const url  = file.type === 'external' ? file.external.url : file.file?.url;
   if (!url) return null;
-  return processImage(url, notionUrlToKey(url, 'notion-cartography'));
+  return processFile(url, notionUrlToKey(url, 'notion-cartography').replace(/\.webp$/, ''));
 }
 
 async function getElevationImage(page: any): Promise<string | null> {
@@ -237,7 +282,7 @@ async function getElevationImage(page: any): Promise<string | null> {
   const file = files[0];
   const url  = file.type === 'external' ? file.external.url : file.file?.url;
   if (!url) return null;
-  return processImage(url, notionUrlToKey(url, 'notion-elevation'));
+  return processFile(url, notionUrlToKey(url, 'notion-elevation').replace(/\.webp$/, ''));
 }
 
 // Cache database_id → data_source_id to avoid redundant retrieve calls
